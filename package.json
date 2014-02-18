@@ -1,0 +1,26 @@
+{
+  "name": "tidl",
+  "version": "0.1.0",
+  "description": "Utility functions for tidl files",
+  "main": "lib/main.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha test/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "(git://github.com/rravuri/tidl.git)"
+  },
+  "keywords": [
+    "tidl"
+  ],
+  "author": "Rakesh Ravuri",
+  "license": "MIT",
+  
+  "devDependencies": {
+   "mocha": "",
+   "should": ""
+ }
+}
