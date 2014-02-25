@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "description": "Utility functions for tidl files",
   "main": "lib/main.js",
-  "bin": { 
-    "tidl": "./bin/cli" 
+  "bin": {
+    "tidl": "./bin/cli"
   },
   "directories": {
     "test": "test"
@@ -21,11 +21,18 @@
   ],
   "author": "Rakesh Ravuri",
   "license": "MIT",
-  "dependencies":{
-    "commander":""
+  "dependencies": {
+    "commander": ""
   },
   "devDependencies": {
-   "mocha": "",
-   "should": ""
- }
+    "mocha": "",
+    "should": "",
+    "grunt": "~0.4.2",
+    "grunt-contrib-uglify": "~0.3.2",
+    "grunt-hashres": "~0.4.1",
+    "grunt-shell": "~0.6.4",
+    "grunt-contrib-clean": "~0.5.0",
+    "grunt-bump": "0.0.13",
+    "grunt-contrib-jshint": "~0.8.0"
+  }
 }
