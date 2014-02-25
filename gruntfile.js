@@ -27,12 +27,22 @@ module.exports = function (grunt) {
 		},
 		jshint: {
 			all: ['Gruntfile.js', 'lib/**/*.js']
+		},
+		mochaTest: {
+			test: {
+				options: {
+					reporter: 'spec'
+				},
+				src: ['test/**/*.js']
+			}
 		}
 	});
 
 	grunt.loadNpmTasks('grunt-bump');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-contrib-jshint');
+	grunt.loadNpmTasks('grunt-mocha-test');
 
+	grunt.registerTask('test', ['jshint', 'mochaTest']);
 	grunt.registerTask('build', ['uglify']);
 };
