@@ -21,7 +21,7 @@ module.exports = function(grunt) {
 			},
 			build: {
 				files: {
-					'public/<%= pkg.name %>-<%= pkg.version %>.min.js': ["lib/main.js"]
+					'dist/<%= pkg.name %>-<%= pkg.version %>.min.js': ["lib/main.js"]
 				}
 			}
 		},
