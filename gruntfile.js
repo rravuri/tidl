@@ -37,9 +37,9 @@ module.exports = function(grunt) {
 			},
 			coverage: {
 				options: {
-					reporter: 'mocha-lcov-reporter',
-					quiet: false,
-					captureFile: 'coverage/results/lcov.info'
+					reporter: 'html-cov',
+					quiet: true,
+					captureFile: 'coverage.html'
 				},
 				src: ['coverage/test/**/*.js']
 			}
