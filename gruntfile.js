@@ -87,6 +87,6 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-copy');
 	grunt.loadNpmTasks('grunt-blanket');
 
-	grunt.registerTask('test', ['clean', 'jshint', 'blanket', 'copy', 'mochaTest', 'coveralls']);
+	grunt.registerTask('test', ['clean', 'jshint', 'blanket', 'copy', 'mochaTest']);
 	grunt.registerTask('build', ['uglify']);
 };
