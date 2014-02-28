@@ -13,10 +13,12 @@ Usage
 
 ### using node
 
-```shell
-$ mkdir tidl
-$ cd tidl
-$ npm install https://github.com/rravuri/tidl/tarball/master
+in windows ...
+```dos
+mkdir tidl
+cd tidl
+npm install https://github.com/rravuri/tidl/tarball/master
+.\node_modules\.bin\tidl.cmd parse idlfilepath\idlfilename.idl
 ```
 
 License
