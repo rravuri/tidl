@@ -34,12 +34,12 @@
     "grunt-contrib-clean": "~0.5.0",
     "grunt-bump": "0.0.13",
     "grunt-contrib-jshint": "~0.8.0",
-    "grunt-simple-mocha": "~0.4.0",
     "grunt-mocha-test": "~0.9.3",
     "blanket": "~1.1.6",
     "mocha-lcov-reporter": "0.0.1",
     "grunt-coveralls": "~0.3.0",
     "grunt-contrib-copy": "~0.5.0",
-    "grunt-blanket": "0.0.8"
+    "grunt-blanket": "0.0.8",
+    "grunt-contrib-concat": "~0.3.0"
   }
 }
