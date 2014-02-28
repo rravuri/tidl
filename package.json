@@ -4,7 +4,7 @@
   "description": "Utility functions for tidl files",
   "main": "lib/main.js",
   "bin": {
-    "tidl": "./bin/cli"
+    "tidl": "./bin/cli.js"
   },
   "directories": {
     "test": "test"
