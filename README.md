@@ -11,7 +11,11 @@ Code Status
 Usage
 -----
 
-### using node
+### Using node
+tidl parser can be installed and managed via [npm](https://npmjs.org/), the [Node.js](http://nodejs.org/) package manager.
+
+tidl parser requires stable Node.js versions >= 0.8.0. Odd version numbers of Node.js are considered unstable development versions.
+
 
 in windows ...
 ```dos
