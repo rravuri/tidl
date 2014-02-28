@@ -15,11 +15,61 @@ Usage
 
 in windows ...
 ```dos
-mkdir tidl
-cd tidl
-npm install https://github.com/rravuri/tidl/tarball/master
-.\node_modules\.bin\tidl.cmd parse idlfilepath\idlfilename.idl
+> mkdir tidl
+> cd tidl
+> npm install https://github.com/rravuri/tidl/tarball/master
+> .\node_modules\.bin\tidl.cmd
+
+  Usage: cli.js [options] [command]
+
+  Commands:
+
+    parse [options] [filename] parse the specified tidl file.
+
+  Options:
+
+    -h, --help     output usage information
+    -V, --version  output the version number
+    -v --verbose   use verbose logging
+>
 ```
+
+parse a tidl file to output the AST in json
+
+```
+> .\node_modules\.bin\tidl.cmd parse filename.idl
+
+```
+
+
+in linux ...
+
+```dos
+$ mkdir tidl
+$ cd tidl
+$ npm install https://github.com/rravuri/tidl/tarball/master
+$ .\node_modules\.bin\tidl
+
+  Usage: cli.js [options] [command]
+
+  Commands:
+
+    parse [options] [filename] parse the specified tidl file.
+
+  Options:
+
+    -h, --help     output usage information
+    -V, --version  output the version number
+    -v --verbose   use verbose logging
+$
+```
+parse a tidl file to output the AST in json
+
+```
+$ .\node_modules\.bin\tidl parse filename.idl
+
+```
+
 
 License
 -------
