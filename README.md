@@ -78,3 +78,8 @@ $ .\node_modules\.bin\tidl parse filename.idl
 License
 -------
 Copyright (c) 2013-2015. See the LICENSE file for license rights and limitations (MIT).
+
+
+Contributors
+------------
+If you're interested in contributing to tidl, fork it here on github and send me a pull request with your contributions.
