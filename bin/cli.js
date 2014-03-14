@@ -50,7 +50,7 @@
                 var output=tidl.parse(idltxt);
                 var restOutput=null;
                 if (restIdltxt!==null){
-                    restOutput = tidl.parse(restIdltxt)
+                    restOutput = tidl.parse(restIdltxt);
                 }
 
                 output.messages.forEach(function(msg, msgindex, messages){
