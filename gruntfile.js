@@ -50,6 +50,10 @@ module.exports = function(grunt) {
 			}
 		},
 		copy: {
+			main:{
+				src:'lib/main.js',
+				dest:'dist/<%= pkg.name %>-<%= pkg.version %>.js'
+			},
 			coverage: {
 				src: ['test/**'],
 				dest: 'coverage/'
