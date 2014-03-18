@@ -1,0 +1,33 @@
+@tidl 2.0.0;
+
+service Service {
+	@description "service descrition";
+    
+    type commonEntity(int param1){
+    }
+    
+    exception commonException(string msg) {
+    }
+    
+	interface Api1 {
+		@description "api1 description";
+    	@version 1.0.0;
+    
+    	int getSum(int a , int b){
+    	}
+    	
+        type api1Entity(int a){
+        }
+	}
+    
+  	interface Api2 exposes Service{
+		@description "api2 description";
+    	@version 1.0.0;
+    
+    	int getProduct(int a , int b){
+    	}
+    
+        type api2Entity(int a){
+        }
+	}
+}

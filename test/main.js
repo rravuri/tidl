@@ -79,7 +79,7 @@ describe('tidl', function() {
 	    });
 	});
 
-	describe('parse',function(){
+	describe('#parse()',function(){
 	    it('should be of type function',function() {
 	        tidl.parse.should.be.an.Function;
 	    });
