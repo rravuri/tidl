@@ -64,11 +64,7 @@
                     output.model.updateEndpoints();
                 }
                 if (options.format.toLowerCase()=='json'){
-                    console.log(util.inspect(output.model, { 
-                        showHidden: false, 
-                        colors: false,
-                        depth: null 
-                    }));
+                    console.log(JSON.stringify(output.model,null,'\t'));
                 }
             });
             process.exit(0);
