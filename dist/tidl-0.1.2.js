@@ -151,13 +151,13 @@
     };
 
     function IdlModel() {
+        this.Service = '';
         this.Attributes = [];
         this.Types = [];
         this.Enumerations = [];
         this.Exceptions = [];
         this.Events = [];
         this.Interfaces = {};
-        this.Service = '';
         return this;
     }
 
@@ -544,7 +544,7 @@
                 var attribute = state.context[0];
                 if (attribute) {
                     try {
-                        attribute.Values[attribute.Values.length - 1] = attribute.Values[attribute.Values.length - 1] + data + (end ? '' : '\n');
+                        attribute.Values[attribute.Values.length - 1] = attribute.Values[attribute.Values.length - 1] + data.replace(/\\/g,'') + (end ? '' : '\n');
                     }
                     catch (ex) {
                     }
@@ -788,7 +788,7 @@
                         obj.Parameters[param.Name] = param;
                         state.context.shift();
                         state.tokenizers.shift();
-                        obj[matches[0]] = param;
+                        //obj[matches[0]] = param;
                         return 'variable';
                     }
                 }
