@@ -10,7 +10,7 @@
 
     function IdlAttr() {
         this.Name = '';
-        this.Type = 0;
+        this.Type = 'String';
         this.Values = [];
         return this;
     }
@@ -151,13 +151,13 @@
     };
 
     function IdlModel() {
+        this.Service = '';
         this.Attributes = [];
         this.Types = [];
         this.Enumerations = [];
         this.Exceptions = [];
         this.Events = [];
         this.Interfaces = {};
-        this.Service = '';
         return this;
     }
 
@@ -339,6 +339,19 @@
         return false;
     }
 
+    function getBodyParam(op, intfAnno) {
+        var route = readOperationAttributeFromAnnontationFile(op, intfAnno, AnnotationAttribute_UrlRouteTemplate);
+        var bodyParam = readOperationAttributeFromAnnontationFile(op, intfAnno, AnnotationAttribute_BodyParameterName);
+
+        if (!(bodyParam === null || bodyParam === undefined || bodyParam === '')) return bodyParam;
+
+        for (var pn in op.Parameters) {
+            var p = op.Parameters[pn];
+            if ((bodyParam === null || bodyParam === undefined || bodyParam === '') && endsWith(p.Name, FromBody_Suffix)) return pn;
+        }
+        return '';
+    }
+
     function getQueryString(op, intfAnno) {
         //Check if method override exists in annotation file
         var route = readOperationAttributeFromAnnontationFile(op, intfAnno, AnnotationAttribute_UrlRouteTemplate);
@@ -469,6 +482,7 @@
                 restendpoint.Values.push(getPostMethods(op, intfAnno));
                 restendpoint.Values.push("v" + intf.Version().Major + "/" + intf.Name.toLowerCase() + "/" + getHttpRoute(op, intf, intfAnno));
                 restendpoint.Values.push(getQueryString(op, intfAnno));
+                restendpoint.Values.push(getBodyParam(op, intfAnno));
 
             }
         }
@@ -544,7 +558,7 @@
                 var attribute = state.context[0];
                 if (attribute) {
                     try {
-                        attribute.Values[attribute.Values.length - 1] = attribute.Values[attribute.Values.length - 1] + data + (end ? '' : '\n');
+                        attribute.Values[attribute.Values.length - 1] = attribute.Values[attribute.Values.length - 1] + data.replace(/\\/g,'') + (end ? '' : '\n');
                     }
                     catch (ex) {
                     }
@@ -788,7 +802,7 @@
                         obj.Parameters[param.Name] = param;
                         state.context.shift();
                         state.tokenizers.shift();
-                        obj[matches[0]] = param;
+                        //obj[matches[0]] = param;
                         return 'variable';
                     }
                 }
@@ -1363,6 +1377,7 @@
                     if (contains(['parameter', 'exception', 'value'], attribute.Name)) {
                         if ((matches = stream.match(ID))!==null) {
                             attribute.Values.push(matches[0]);
+                            attribute.Type='Parameter';
                             state.lastToken = 'v';
                             return "variable " + state.ec;
                         }
@@ -1373,6 +1388,7 @@
                     else if (contains(['tidl', 'version', 'since', 'revision'], attribute.Name)) {
                         if ((matches = stream.match(/\d+\.\d+.\d+(\-[0-9a-zA-Z]+(\.[0-9a-zA-Z]+)*)?(\+[0-9a-zA-Z]+(\.[0-9a-zA-Z]+)*)?/, true))!==null) {
                             attribute.Values.push(matches[0]);
+                            attribute.Type='Version';
                             state.lastToken = 'v';
                             return "number " + state.ec;
                         }
@@ -1410,6 +1426,7 @@
                     if (attribute.Name == "tidl" && state.ec === '') {
                         state.setWarn(1002);
                     }
+                    attribute.Values.push('');
                     state.tokenizers.unshift(tokenString(stream.next(), stream.column()));
                     return tokenize(stream, state);
                 }
@@ -1673,6 +1690,22 @@
         sutil.StringStream = CodeMirror.StringStream;
         sutil.splitLines = CodeMirror.splitLines;
     }
+
+    tidl.parseWithAnnotations=function _parseWithAnnotations(idlText, annotationText) {
+        var r1=tidl.parse(idlText);
+        var r2=null;
+
+        if (annotationText) {
+            r2=tidl.parse(annotationText);
+        }
+
+        if (r1!==null && r1.model!==null) {
+            if (r2!==null && r2.model!==null) {
+                r1.model.updateEndpoints(r2.model);
+            }
+        }
+        return [r1,r2];
+    };
 
     tidl.parse=function _parse(idltext,tabsize) {
         var tokenizer=_createTokenizer({},{});
