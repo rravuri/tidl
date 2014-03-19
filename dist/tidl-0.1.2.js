@@ -10,7 +10,7 @@
 
     function IdlAttr() {
         this.Name = '';
-        this.Type = 'String';
+        this.Type = 0;
         this.Values = [];
         return this;
     }
@@ -1363,7 +1363,6 @@
                     if (contains(['parameter', 'exception', 'value'], attribute.Name)) {
                         if ((matches = stream.match(ID))!==null) {
                             attribute.Values.push(matches[0]);
-                            attribute.Type='Parameter';
                             state.lastToken = 'v';
                             return "variable " + state.ec;
                         }
@@ -1374,7 +1373,6 @@
                     else if (contains(['tidl', 'version', 'since', 'revision'], attribute.Name)) {
                         if ((matches = stream.match(/\d+\.\d+.\d+(\-[0-9a-zA-Z]+(\.[0-9a-zA-Z]+)*)?(\+[0-9a-zA-Z]+(\.[0-9a-zA-Z]+)*)?/, true))!==null) {
                             attribute.Values.push(matches[0]);
-                            attribute.Type='Version';
                             state.lastToken = 'v';
                             return "number " + state.ec;
                         }
@@ -1675,22 +1673,6 @@
         sutil.StringStream = CodeMirror.StringStream;
         sutil.splitLines = CodeMirror.splitLines;
     }
-
-    tidl.parseWithAnnotations=function _parseWithAnnotations(idlText, annotationText) {
-        var r1=tidl.parse(idlText);
-        var r2=null;
-
-        if (annotationText) {
-            tidl.parse(annotationText);
-        }
-
-        if (r1!==null && r1.model!==null) {
-            if (r2!==null && r2.model!==null) {
-                r1.model.updateEndpoints(r2.model);
-            }
-        }
-        return [r1,r2];
-    };
 
     tidl.parse=function _parse(idltext,tabsize) {
         var tokenizer=_createTokenizer({},{});
