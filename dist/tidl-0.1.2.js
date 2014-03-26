@@ -22,7 +22,7 @@
         newattr.Values = this.Values.concat([]);
         return newattr;
     };
-
+   
     function IdlType() {
         this.Name = '';
         this.Types = [];
@@ -200,6 +200,7 @@
         ["get", "GET", "", ""],
         ["searchby", "GET", "", "search"],
         ["search", "GET", "search", ""],
+        ["history", "GET", "", "history"],
         ["retrieve", "POST", "", "retrieve"],
         ["deleteFrom", "DELETE", "", ""],
         ["delete", "DELETE", "", ""],
@@ -226,6 +227,7 @@
         ["propose", "POST", "", ""],
         ["adjust", "POST", "adjust", ""],
         ["move", "POST", "move", ""],
+        ["render", "POST", "", "render"],
         ["reject", "DELETE", "", ""],
         ["remove", "DELETE", "", ""],
         ["cancel", "DELETE", "", ""],
@@ -246,7 +248,7 @@
 
     function readOperationAttributeFromAnnontationFile(op, intfAnno, attributeName) {
         var value = '';
-        if (intfAnno===null || intfAnno===undefined) return value;
+        if (intfAnno === null || intfAnno === undefined) return value;
 
         if (intfAnno.Operations !== null && intfAnno.Operations.length > 0) {
             var aop = null;
@@ -303,7 +305,7 @@
                 method = 'POST';
             }
             for (var p in op.Parameters) {
-                if (endsWith(p, "FromBody")) {
+                if (endsWith(p, FromBody_Suffix)) {
                     method = "POST";
                 }
             }
@@ -312,7 +314,7 @@
     }
 
     function getParam(p) {
-        return (endsWith(p.Name, "FromBody") ? p.Name.substr(0, p.Name.length - 8) : p.Name);
+        return (endsWith(p.Name, FromBody_Suffix) ? p.Name.substr(0, p.Name.length - 8) : p.Name);
     }
 
     function excludeParameterFromQuerystring(p, route, bodyParam) {
@@ -322,7 +324,7 @@
 
         if ((route === null || route === undefined || route === '')) {
             //Mandatory parameters except of type set or list, are excluded from querystring (since they are part of route)
-            if (p.Mandatory && 
+            if (p.Mandatory &&
                 !((p.Type.Name.indexOf("set") === 0) || (p.Type.Name.indexOf("list") === 0)
                     )
                 ) {
@@ -330,10 +332,10 @@
             }
         }
         else {
-                //If the route is provided via annonation file, then route parameters are excluded from querystring
-                if (route.indexOf('{' + p.Name + '}') > 0) {
-                    return true;
-                }
+            //If the route is provided via annonation file, then route parameters are excluded from querystring
+            if (route.indexOf('{' + p.Name + '}') > 0) {
+                return true;
+            }
         }
 
         return false;
@@ -396,10 +398,10 @@
 
         var qp = "";
         var isf = true;
-        var s='';
+        var s = '';
         for (var pn in op.Parameters) {
             var p = op.Parameters[pn];
-            if (p.Mandatory && !endsWith(p.Name, "FromBody") && (p.Type.Name != "set") && (p.Type.Name != "list")) {
+            if (p.Mandatory && !endsWith(p.Name, FromBody_Suffix) && (p.Type.Name != "set") && (p.Type.Name != "list")) {
                 if (endsWith(roppart.toLowerCase(), "by" + p.Name.toLowerCase()) || endsWith(roppart.toLowerCase(), "to" + p.Name.toLowerCase())) {
                     s = "/{" + p.Name.toLowerCase() + "}" + roppart.substr(0, roppart.length - (p.Name.length + 2));
                     roppart = s;
@@ -430,6 +432,30 @@
         route += qp;
         return formatRoute(route);
     }
+    
+    function getHttpErrorCodeForException(exceptionType, intfAnno) {
+        
+        var httpErrorStatus = '500';
+        if (intfAnno === null || intfAnno === undefined)
+            return httpErrorStatus;
+        if (intfAnno.Exceptions === null || intfAnno.Exceptions === undefined)
+            return httpErrorStatus;
+        
+        if (intfAnno.Exceptions.length > 0)
+        {
+            //Check if the current exception has a custom http error code value specified in the annontated file
+            for (var ex in intfAnno.Exceptions) {
+                var e = intfAnno.Exceptions[ex];
+                if (e.Name === exceptionType.Name) {
+                    var errorStatusAttrib = e.getAttribute(AnnotationAttribute_HttpStatus);
+                    if (errorStatusAttrib !== null && errorStatusAttrib !== undefined && errorStatusAttrib.Values.length > 0)
+                        return errorStatusAttrib.Values[0].trim();
+                }
+            }
+        }
+        return httpErrorStatus.trim();
+    }
+
 
     IdlIntf.prototype.Version = function () {
         var v = { Major: 0, Minor: 0, Build: 0 };
@@ -452,11 +478,11 @@
         var intfAnno;
         for (var infn in idlModel.Interfaces) {
             var intf = idlModel.Interfaces[infn];
-            if (annoModel){
-                try{
-                    intfAnno=annoModel.Interfaces[infn];
+            if (annoModel) {
+                try {
+                    intfAnno = annoModel.Interfaces[infn];
                 }
-                catch(e){
+                catch (e) {
 
                 }
             }
@@ -487,8 +513,47 @@
             }
         }
     };
+    
+    IdlModel.prototype.updateExceptionTypes = function (annoModel) {
+        var idlModel = this;
+        var i;
+        var intfAnno;
+        for (var infn in idlModel.Interfaces) {
+            var intf = idlModel.Interfaces[infn];
+            if (annoModel) {
+                try {
+                    intfAnno = annoModel.Interfaces[infn];
+                }
+                catch (e) {
 
-   var tidl = {
+                }
+            }
+            for (var exi in intf.Exceptions) {
+                var ex = intf.Exceptions[exi];
+                var restHttpStatus = null;
+                for (i = 0; i < ex.Attributes.length; ++i) {
+                    if (ex.Attributes[i].Name == 'resthttpstatus') {
+                        restHttpStatus = ex.Attributes[i];
+                        break;
+                    }
+                }
+                if (restHttpStatus === null) {
+                    restHttpStatus = new IdlAttr();
+                    restHttpStatus.Name = "resthttpstatus";
+                    //,Type = IdlAttr.IdlAttrType.String
+
+                    ex.Attributes.push(restHttpStatus);
+                }
+                else {
+                    restHttpStatus.Values = [];
+                }
+                restHttpStatus.Values.push(getHttpErrorCodeForException(ex, intfAnno));
+            }
+        }
+    };
+
+
+    var tidl = {
         IdlModel: IdlModel,
         IdlAttr: IdlAttr,
         IdlIntf: IdlIntf,
@@ -497,27 +562,27 @@
         IdlParam: IdlParam,
 
         Messages: {
-            '1000': 'Unknown error', 
-            '1001': "Unsupported attribute: Expecting 'tidl' attribute.", 
-            '1002': "Unused value: Will be ignored.", 
-            '1003': "Unsupported attribute: Expecting one of 'description', 'owner', 'version', 'revision', 'author', 'reviewer', 'organisation', 'namespacePrefix', 'organisationDomainName'.", 
-            '1004': "Duplicate: Will be ignored.", 
-            '1005': "Unsupported in tidl 1.x.x files, please change the tidl version to 2.0.0;", 
-            '1006': "Unsupported attribute: Expecting one of 'description', 'owner', 'organisation', 'namespacePrefix', 'organisationDomainName'.", 
-            '1007': "Unsupported attribute: Expecting one of 'description', 'parameter', 'since','revision', 'exception', 'return','value','seealso'.", 
+            '1000': 'Unknown error',
+            '1001': "Unsupported attribute: Expecting 'tidl' attribute.",
+            '1002': "Unused value: Will be ignored.",
+            '1003': "Unsupported attribute: Expecting one of 'description', 'owner', 'version', 'revision', 'author', 'reviewer', 'organisation', 'namespacePrefix', 'organisationDomainName'.",
+            '1004': "Duplicate: Will be ignored.",
+            '1005': "Unsupported in tidl 1.x.x files, please change the tidl version to 2.0.0;",
+            '1006': "Unsupported attribute: Expecting one of 'description', 'owner', 'organisation', 'namespacePrefix', 'organisationDomainName'.",
+            '1007': "Unsupported attribute: Expecting one of 'description', 'parameter', 'since','revision', 'exception', 'return','value','seealso'.",
 
-            '2001': "Unexpected character: Expecting an attribute type like description, parameter etc,.", 
-            '2002': "Unexpected character: Expecting an attribute or a interface definition.", 
-            '2003': "Unexpected character: Bad syntax.", 
-            '2004': "Unexpected character: Expecting an ID as the first value for the attributes 'parameter', 'exception' or 'value'.", 
-            '2005': "Unexpected character: Expecting an n.n.n version as the first value for the attributes 'tidl', 'version', 'since' or 'revision'.", 
-            '2006': "Unexpected character: Expecting a string as the first value for the attribute.", 
-            '2007': "", 
-            '2008': "", 
-            '2009': "", 
-            '2010': "Unexpected character: Expected a valid interface name.", 
-            '2011': "Unexpected character: Expected 'exposes' keyword.", 
-            '2012': "Mismatched Service. The Service Name in Service decleration and interface do not match.", 
+            '2001': "Unexpected character: Expecting an attribute type like description, parameter etc,.",
+            '2002': "Unexpected character: Expecting an attribute or a interface definition.",
+            '2003': "Unexpected character: Bad syntax.",
+            '2004': "Unexpected character: Expecting an ID as the first value for the attributes 'parameter', 'exception' or 'value'.",
+            '2005': "Unexpected character: Expecting an n.n.n version as the first value for the attributes 'tidl', 'version', 'since' or 'revision'.",
+            '2006': "Unexpected character: Expecting a string as the first value for the attribute.",
+            '2007': "",
+            '2008': "",
+            '2009': "",
+            '2010': "Unexpected character: Expected a valid interface name.",
+            '2011': "Unexpected character: Expected 'exposes' keyword.",
+            '2012': "Mismatched Service. The Service Name in Service decleration and interface do not match.",
 
             '3001': "Standards: Suggested to start with a capital letter."
         }
@@ -542,7 +607,7 @@
         function tokenString(quote, col) {
             return function _tokenString(stream, state) {
                 var data = "", next, end = false, escaped = false;
-                while ((next = stream.next())||false) {
+                while ((next = stream.next()) || false) {
                     if (next === quote && !escaped) {
                         end = true;
                         break;
@@ -558,7 +623,7 @@
                 var attribute = state.context[0];
                 if (attribute) {
                     try {
-                        attribute.Values[attribute.Values.length - 1] = attribute.Values[attribute.Values.length - 1] + data.replace(/\\/g,'') + (end ? '' : '\n');
+                        attribute.Values[attribute.Values.length - 1] = attribute.Values[attribute.Values.length - 1] + data.replace(/\\/g, '') + (end ? '' : '\n');
                     }
                     catch (ex) {
                     }
@@ -605,7 +670,7 @@
                 var array = state.context[0];
 
                 if (state.lastToken === '' || state.lastToken == ',') {
-                    if ((matches = stream.match(ID))!==null) {
+                    if ((matches = stream.match(ID)) !== null) {
                         state.lastToken = 'i';
                         array.push(matches[0]);
                         if (contains(builtintypes, matches[0])) {
@@ -653,7 +718,7 @@
                 var parent = state.context[1];
 
                 if (type.Name === '') {
-                    if ((matches = stream.match(ID))!==null) {
+                    if ((matches = stream.match(ID)) !== null) {
                         type.Name = matches[0];
                         state.lastToken = 't';
                         if (contains(builtintypes, matches[0])) {
@@ -702,7 +767,7 @@
                 var t;
 
                 if (state.lastToken == '<' || state.lastToken == ',') {
-                    if ((matches = stream.match(ID, false))!==null) {
+                    if ((matches = stream.match(ID, false)) !== null) {
                         state.context.unshift(new tidl.IdlType());
                         state.tokenizers.unshift(tokenizeType());
                         return tokenize(stream, state);
@@ -730,7 +795,7 @@
                     state.tokenizers.unshift(tokenizeTypeList());
                     return "operator";
                 }
-                else if ((matches = stream.match(ID))!==null) {
+                else if ((matches = stream.match(ID)) !== null) {
                     t = { name: matches[0], type: 'dataType', parameters: [] };
                     obj.parameters.push(t);
                     if (contains(builtintypes, matches[0])) {
@@ -773,7 +838,7 @@
                 var obj = state.context[1];
 
 
-                if ((matches = stream.match(ID, false))!==null) {
+                if ((matches = stream.match(ID, false)) !== null) {
                     if (matches[0] == 'mandatory' && obj.type != 'enumeration' && param.Mandatory === false) {
                         stream.match(ID);
                         param.Modifiers.push(matches[0]);
@@ -834,7 +899,7 @@
                 var parentScope = state.context[1];
                 var param;
                 if (state.lastToken == '(') {
-                    if ((matches = stream.match(ID, false))!==null) {
+                    if ((matches = stream.match(ID, false)) !== null) {
                         param = new tidl.IdlParam();
                         state.context.unshift(param);
                         state.tokenizers.unshift(tokenizeParam());
@@ -889,7 +954,7 @@
                 if (stream.peek() == '@') {
                     stream.next();
                     var attribute = new tidl.IdlAttr();
-                    if ((matches = stream.match(ID, true))!==null) {
+                    if ((matches = stream.match(ID, true)) !== null) {
                         attribute.Name = matches[0];
                         if (contains(['description', 'parameter', 'since',
                             'revision', 'exception', 'return', 'value', 'seealso'], attribute.Name) === false) {
@@ -937,7 +1002,7 @@
                 var matches;
 
                 if (obj.Name === '') {
-                    if ((matches = stream.match(ID))!==null) {
+                    if ((matches = stream.match(ID)) !== null) {
                         state.lastToken = 'i';
                         obj.Name = matches[0];
                         if (obj.type == 'operation') {
@@ -955,7 +1020,7 @@
                     return null;
                 }
                 else if (state.lastToken == ')') {
-                    if ((matches = stream.match(ID, false))!==null) {
+                    if ((matches = stream.match(ID, false)) !== null) {
                         if (matches == 'throws') {
                             if (obj.type == 'operation') {
                                 state.lastToken = '';
@@ -1038,7 +1103,7 @@
                 if (stream.peek() == '@') {
                     stream.next();
                     var attribute = new tidl.IdlAttr();
-                    if ((matches = stream.match(ID, true))!==null) {
+                    if ((matches = stream.match(ID, true)) !== null) {
                         attribute.Name = matches[0];
                         if (contains(['description', 'owner', 'version',
                             'revision', 'author', 'reviewer', 'organisation',
@@ -1056,7 +1121,7 @@
                     }
                 }
 
-                if ((matches = stream.match(ID, false))!==null) {
+                if ((matches = stream.match(ID, false)) !== null) {
                     if (contains(['type', 'event', 'exception', 'enumeration'], matches[0])) {
                         stream.match(ID);
                         ob = new tidl.IdlOps();
@@ -1129,23 +1194,23 @@
                 var matches;
 
                 if (intf.Service === '') {
-                    if ((matches = stream.match(ID))!==null) {
+                    if ((matches = stream.match(ID)) !== null) {
                         if (intf.Name !== '') {
                             if (state.lastToken == 'k') {
                                 intf.Service = matches[0];
                                 state.ec = '';
-                                if (sname!==''){
-                                    if (intf.Service.toLowerCase()!=sname.toLowerCase()){
+                                if (sname !== '') {
+                                    if (intf.Service.toLowerCase() != sname.toLowerCase()) {
                                         state.setError(2012);
-                                        return 'error '+state.ec;
+                                        return 'error ' + state.ec;
                                     }
                                 }
                                 else if (intf.Service.toUpperCase()[0] != intf.Service[0]) {
-                                    parentScope.Service=intf.Service;
+                                    parentScope.Service = intf.Service;
                                     return "def info-mark m-3001";
                                 }
                                 else {
-                                    parentScope.Service=intf.Service;
+                                    parentScope.Service = intf.Service;
                                 }
                                 return 'def';
                             }
@@ -1169,7 +1234,7 @@
                         }
                     }
                     else {
-                        if (sname!=='' && intf.Name!=='' && stream.peek() == '{'){
+                        if (sname !== '' && intf.Name !== '' && stream.peek() == '{') {
                             intf.Service = sname;
                             stream.next();
                             state.tokenizers.shift();
@@ -1231,7 +1296,7 @@
                 if (stream.peek() == '@') {
                     stream.next();
                     var attribute = new tidl.IdlAttr();
-                    if ((matches = stream.match(ID, true))!==null) {
+                    if ((matches = stream.match(ID, true)) !== null) {
                         attribute.Name = matches[0];
                         if (contains(['description', 'owner', 'organisation',
                             'namespacePrefix', 'organisationDomainName'], attribute.Name) === false) {
@@ -1247,7 +1312,7 @@
                         return 'error error-mark m-2003';
                     }
                 }
-                if ((matches = stream.match(/^interface\s/))!==null) {
+                if ((matches = stream.match(/^interface\s/)) !== null) {
                     var intf = new tidl.IdlIntf();
                     state.ec = '';
                     state.context.unshift(intf);
@@ -1255,7 +1320,7 @@
                     return "keyword";
                 }
 
-                if ((matches = stream.match(ID, false))!==null) {
+                if ((matches = stream.match(ID, false)) !== null) {
                     if (contains(['type', 'event', 'exception', 'enumeration'], matches[0])) {
                         stream.match(ID);
                         var ob = new tidl.IdlOps();
@@ -1300,7 +1365,7 @@
                 var matches;
 
                 if (model.Service === '') {
-                    if ((matches = stream.match(ID))!==null) {
+                    if ((matches = stream.match(ID)) !== null) {
                         model.Service = matches[0];
                         state.ec = '';
                         if (model.Service.toUpperCase()[0] != model.Service[0]) {
@@ -1375,9 +1440,9 @@
                 var matches;
                 if (attribute.Values.length === 0) {
                     if (contains(['parameter', 'exception', 'value'], attribute.Name)) {
-                        if ((matches = stream.match(ID))!==null) {
+                        if ((matches = stream.match(ID)) !== null) {
                             attribute.Values.push(matches[0]);
-                            attribute.Type='Parameter';
+                            attribute.Type = 'Parameter';
                             state.lastToken = 'v';
                             return "variable " + state.ec;
                         }
@@ -1386,9 +1451,9 @@
                         }
                     }
                     else if (contains(['tidl', 'version', 'since', 'revision'], attribute.Name)) {
-                        if ((matches = stream.match(/\d+\.\d+.\d+(\-[0-9a-zA-Z]+(\.[0-9a-zA-Z]+)*)?(\+[0-9a-zA-Z]+(\.[0-9a-zA-Z]+)*)?/, true))!==null) {
+                        if ((matches = stream.match(/\d+\.\d+.\d+(\-[0-9a-zA-Z]+(\.[0-9a-zA-Z]+)*)?(\+[0-9a-zA-Z]+(\.[0-9a-zA-Z]+)*)?/, true)) !== null) {
                             attribute.Values.push(matches[0]);
-                            attribute.Type='Version';
+                            attribute.Type = 'Version';
                             state.lastToken = 'v';
                             return "number " + state.ec;
                         }
@@ -1460,7 +1525,7 @@
             if (stream.eat('@')) {
                 var attribute = new tidl.IdlAttr();
                 state.ec = '';
-                if ((matches = stream.match(ID, true))!==null) {
+                if ((matches = stream.match(ID, true)) !== null) {
                     attribute.Name = matches[0];
                     if (contains(['tidl'], attribute.Name) === false) {
                         state.setWarn(1001);
@@ -1483,7 +1548,7 @@
                     return 'error error-mark m-2001';
                 }
             }
-            if ((matches = stream.match(/^service\s/))!==null) {
+            if ((matches = stream.match(/^service\s/)) !== null) {
                 var tidlAttr = contains(model.Attributes, function (a) { return a.Name == 'tidl'; });
                 if (tidlAttr === false || tidlAttr.Values[0].charAt(0) != '2') {
                     stream.skipToEnd();
@@ -1494,7 +1559,7 @@
                 state.tokenizers.unshift(tokenizeService());
                 return "keyword";
             }
-            if ((matches = stream.match(/^interface\s/))!==null) {
+            if ((matches = stream.match(/^interface\s/)) !== null) {
                 var intf = new tidl.IdlIntf();
                 state.ec = '';
                 state.context.unshift(intf);
@@ -1578,7 +1643,7 @@
         };
     }
 
-    var sutil={};
+    var sutil = {};
 
     // from CodeMirror
     // Counts the column offset in a string, taking tabs into account.
@@ -1685,67 +1750,71 @@
         return result;
     } : function (string) { return string.split(/\r\n?|\n/); };
 
-    if (this.CodeMirror||false) {
+    if (this.CodeMirror || false) {
         CodeMirror.defineMode("tidl", _createTokenizer);
         sutil.StringStream = CodeMirror.StringStream;
         sutil.splitLines = CodeMirror.splitLines;
     }
 
-    tidl.parseWithAnnotations=function _parseWithAnnotations(idlText, annotationText) {
-        var r1=tidl.parse(idlText);
-        var r2=null;
+    tidl.parseWithAnnotations = function _parseWithAnnotations(idlText, annotationText) {
+        var r1 = tidl.parse(idlText);
+        var r2 = null;
 
         if (annotationText) {
-            r2=tidl.parse(annotationText);
+            r2 = tidl.parse(annotationText);
         }
 
-        if (r1!==null && r1.model!==null) {
-            if (r2!==null && r2.model!==null) {
+        if (r1 !== null && r1.model !== null) {
+            if (r2 !== null && r2.model !== null) {
                 r1.model.updateEndpoints(r2.model);
+                r1.model.updateExceptionTypes(r2.model);
+            } else {
+                r1.model.updateEndpoints(null);
+                r1.model.updateExceptionTypes(null);
             }
         }
-        return [r1,r2];
+        return [r1, r2];
     };
 
-    tidl.parse=function _parse(idltext,tabsize) {
-        var tokenizer=_createTokenizer({},{});
-        var state=tokenizer.startState();
-        var msgs=[];
-        
-        if (idltext===null || idltext===undefined) {
+    tidl.parse = function _parse(idltext, tabsize) {
+        var tokenizer = _createTokenizer({}, {});
+        var state = tokenizer.startState();
+        var msgs = [];
+
+        if (idltext === null || idltext === undefined) {
             return null;
         }
 
-        var lines=sutil.splitLines(idltext);
+        var lines = sutil.splitLines(idltext);
 
-        lines.forEach(function(val,index,array){
-            var stream=new sutil.StringStream(val,tabsize||4);
+        lines.forEach(function (val, index, array) {
+            var stream = new sutil.StringStream(val, tabsize || 4);
             var token = tokenizer.token;
             var style;
             while (!stream.eol()) {
-                var colstart=stream.pos;
-                style=token(stream,state);
-                stream.start=stream.pos;
-                var colend=stream.pos;
-                if (style){
-                var iserror=(style.indexOf('error-mark')!=-1),
-                iswarning=(style.indexOf('warning-mark')!=-1),
-                isinfo=(style.indexOf('info-mark')!=-1);
-                    if(iserror||iswarning||isinfo){
-                        var ci=style.indexOf('m-');
-                        var code=style.substr(ci+2);
+                var colstart = stream.pos;
+                style = token(stream, state);
+                stream.start = stream.pos;
+                var colend = stream.pos;
+                if (style) {
+                    var iserror = (style.indexOf('error-mark') != -1),
+                    iswarning = (style.indexOf('warning-mark') != -1),
+                    isinfo = (style.indexOf('info-mark') != -1);
+                    if (iserror || iswarning || isinfo) {
+                        var ci = style.indexOf('m-');
+                        var code = style.substr(ci + 2);
                         msgs.push({
-                            line:index+1,
-                            col:colstart,
-                            charcount:colend-colstart,
-                            code:code,
-                            type:(iserror?'error':(iswarning?'warning':'info'))
+                            line: index + 1,
+                            col: colstart,
+                            charcount: colend - colstart,
+                            code: code,
+                            type: (iserror ? 'error' : (iswarning ? 'warning' : 'info'))
                         });
                     }
                 }
             }
         });
-        return {model:state.model, messages:msgs};
+        return { model: state.model, messages: msgs };
     };
 
     // global on the server, window in the browser 
