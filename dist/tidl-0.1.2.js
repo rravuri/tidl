@@ -228,6 +228,7 @@
         ["adjust", "POST", "adjust", ""],
         ["move", "POST", "move", ""],
         ["render", "POST", "", "render"],
+        ["register", "POST", "", ""],
         ["reject", "DELETE", "", ""],
         ["remove", "DELETE", "", ""],
         ["cancel", "DELETE", "", ""],
@@ -376,7 +377,7 @@
         if (route && route !== '') {
             return formatRoute(route);
         }
-
+        
         var i = 0;
         var h = null;
         for (i = 0; i < HttpVerbsMapping.length; ++i) {
@@ -433,16 +434,25 @@
         return formatRoute(route);
     }
     
-    function getHttpErrorCodeForException(exceptionType, intfAnno) {
+    function getHttpErrorCodeForException(exceptionType, annoModel) {
         
         var httpErrorStatus = '500';
-        if (intfAnno === null || intfAnno === undefined)
-            return httpErrorStatus;
-        if (intfAnno.Exceptions === null || intfAnno.Exceptions === undefined)
+        if (annoModel === null || annoModel === undefined)
             return httpErrorStatus;
         
-        if (intfAnno.Exceptions.length > 0)
-        {
+        //Try to match the exception in common exceptions from annotated model
+        for (var ex in annoModel.Exceptions) {
+            var e = annoModel.Exceptions[ex];
+            if (e.Name === exceptionType.Name) {
+                var errorStatusAttrib = e.getAttribute(AnnotationAttribute_HttpStatus);
+                if (errorStatusAttrib !== null && errorStatusAttrib !== undefined && errorStatusAttrib.Values.length > 0)
+                    return errorStatusAttrib.Values[0].trim();
+            }
+        }
+        
+        //Try to match the exception in interface exceptions from annotated model
+        for (var intfAnnoN in annoModel.Interfaces) {
+            intfAnno = annoModel.Interfaces[intfAnnoN];
             //Check if the current exception has a custom http error code value specified in the annontated file
             for (var ex in intfAnno.Exceptions) {
                 var e = intfAnno.Exceptions[ex];
@@ -453,8 +463,25 @@
                 }
             }
         }
+        
         return httpErrorStatus.trim();
+
     }
+
+    IdlModel.prototype.Version = function () {
+        var v = { Major: 0, Minor: 0, Build: 0 };
+
+        for (i = 0; i < this.Attributes.length; ++i) {
+            if (this.Attributes[i].Name == 'version') {
+                var d = this.Attributes[i].Values[0].split('.');
+                v.Major = d[0];
+                v.Minor = d[1];
+                v.Build = d[2];
+                break;
+            }
+        }
+        return v;
+    };
 
 
     IdlIntf.prototype.Version = function () {
@@ -505,8 +532,9 @@
                 else {
                     restendpoint.Values = [];
                 }
+                var majorVersion = intf.Version().Major == 0 ? idlModel.Version().Major : intf.Version().Major;
                 restendpoint.Values.push(getPostMethods(op, intfAnno));
-                restendpoint.Values.push("v" + intf.Version().Major + "/" + intf.Name.toLowerCase() + "/" + getHttpRoute(op, intf, intfAnno));
+                restendpoint.Values.push("v" + majorVersion + "/" + intf.Name.toLowerCase() + "/" + getHttpRoute(op, intf, intfAnno));
                 restendpoint.Values.push(getQueryString(op, intfAnno));
                 restendpoint.Values.push(getBodyParam(op, intfAnno));
 
@@ -517,17 +545,35 @@
     IdlModel.prototype.updateExceptionTypes = function (annoModel) {
         var idlModel = this;
         var i;
-        var intfAnno;
-        for (var infn in idlModel.Interfaces) {
-            var intf = idlModel.Interfaces[infn];
-            if (annoModel) {
-                try {
-                    intfAnno = annoModel.Interfaces[infn];
-                }
-                catch (e) {
 
+       
+        //Update common exception types in model
+        for (var exi in idlModel.Exceptions) {
+            var ex = idlModel.Exceptions[exi];
+            var restHttpStatusCommon = null;
+            for (i = 0; i < ex.Attributes.length; ++i) {
+                if (ex.Attributes[i].Name == 'resthttpstatus') {
+                    restHttpStatusCommon = ex.Attributes[i];
+                    break;
                 }
             }
+            if (restHttpStatusCommon === null) {
+                restHttpStatusCommon = new IdlAttr();
+                restHttpStatusCommon.Name = "resthttpstatus";
+                //,Type = IdlAttr.IdlAttrType.String
+
+                ex.Attributes.push(restHttpStatusCommon);
+            }
+            else {
+                restHttpStatusCommon.Values = [];
+            }
+            restHttpStatusCommon.Values.push(getHttpErrorCodeForException(ex, annoModel));
+        }
+
+        //Update exception types in model interfaces
+        for (var infn in idlModel.Interfaces) {
+            var intf = idlModel.Interfaces[infn];
+
             for (var exi in intf.Exceptions) {
                 var ex = intf.Exceptions[exi];
                 var restHttpStatus = null;
@@ -547,7 +593,7 @@
                 else {
                     restHttpStatus.Values = [];
                 }
-                restHttpStatus.Values.push(getHttpErrorCodeForException(ex, intfAnno));
+                restHttpStatus.Values.push(getHttpErrorCodeForException(ex, annoModel));
             }
         }
     };
