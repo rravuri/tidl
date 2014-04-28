@@ -22,7 +22,9 @@
   "author": "Rakesh Ravuri",
   "license": "MIT",
   "dependencies": {
-    "commander": ""
+    "commander": "",
+    "bliss":"",
+    "JSONPath":""
   },
   "devDependencies": {
     "mocha": "",
