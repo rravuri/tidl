@@ -22,13 +22,15 @@
   "author": "Rakesh Ravuri",
   "license": "MIT",
   "dependencies": {
-    "commander": "",
-    "bliss":"",
-    "JSONPath":""
+    "commander": "2.1.x",
+    "bliss":"1.0.x",
+    "JSONPath":"0.10.x",
+    "glob":"3.2.x",
+    "minimatch":"0.2.x"
   },
   "devDependencies": {
-    "mocha": "",
-    "should": "",
+    "mocha": "1.17.x",
+    "should": "3.1.x",
     "grunt": "~0.4.2",
     "grunt-contrib-uglify": "~0.3.2",
     "grunt-hashres": "~0.4.1",
@@ -43,5 +45,6 @@
     "grunt-contrib-copy": "~0.5.0",
     "grunt-blanket": "0.0.8",
     "grunt-contrib-concat": "~0.3.0"
-  }
+  },
+  "engine":"node>=0.8.0"
 }
