@@ -68,11 +68,16 @@
         return this;
     }
 
-    IdlOps.prototype.getAttribute = function _getAttribute(name) {
+    IdlOps.prototype.getAttribute = function _getAttribute(name,value0) {
         for (i = 0; i < this.Attributes.length; ++i) {
             var attr = this.Attributes[i];
             if (attr.Name == name) {
-                return attr;
+                if (value0!==undefined){
+                    if (attr.Values[0]==value0)
+                        return attr;
+                }
+                else
+                    return attr;
             }
         }
         return null;
@@ -115,11 +120,16 @@
         this.Enumerations = [];
         this.Exceptions = [];
         this.Events = [];
-        this.getAttribute = function _getAttribute(name) {
+        this.getAttribute = function _getAttribute(name, value0) {
             for (i = 0; i < this.Attributes.length; ++i) {
                 var attr = this.Attributes[i];
                 if (attr.Name == name) {
-                    return attr;
+                    if (value0!==undefined){
+                        if (attr.Values[0]==value0)
+                            return attr;
+                    }
+                    else
+                        return attr;
                 }
             }
             return null;
@@ -1023,7 +1033,7 @@
                     var attribute = new tidl.IdlAttr();
                     if ((matches = stream.match(ID, true)) !== null) {
                         attribute.Name = matches[0];
-                        if (contains(['description', 'parameter', 'since',
+                        if (contains(['description', 'parameter', 'since','method','urlTemplate','bodyParam',
                             'revision', 'exception', 'return', 'value', 'seealso'], attribute.Name) === false) {
                             state.setWarn(1007);
                         }
