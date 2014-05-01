@@ -3,10 +3,10 @@ tidl
 
 Utilities for working with tidl files.
 
-Code Status
------------
+Project Status
+--------------
 
-[![Build Status](https://travis-ci.org/rravuri/tidl.png?branch=master)](https://travis-ci.org/rravuri/tidl)
+[![Build Status](https://travis-ci.org/rravuri/tidl.png?branch=master)](https://travis-ci.org/rravuri/tidl) [![Dependency Status](https://gemnasium.com/rravuri/tidl.png)](https://gemnasium.com/rravuri/tidl) [![Built with Grunt](https://cdn.gruntjs.com/builtwith.png)](http://gruntjs.com/)
 
 Usage
 -----
