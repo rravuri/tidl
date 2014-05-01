@@ -9,6 +9,8 @@
     var util=require('util');
     var Bliss=require('bliss');
     var jsonPath = require('JSONPath'); 
+    var glob=require('glob')
+    var minimatch=require('minimatch');
 
     process.title='tidl';
 
@@ -17,17 +19,18 @@
         .option('-v, --verbose', 'use verbose logging')
         .option('-i, --include <type>','include additional overlay file in the same path [none, all, rest]','all')
         .option('-F, --force','force overwrite existing files in output directory')
+        .option('-a, --append','append to existing files in output directory')
         .option('-o, --outputdir <dir>','output directory default:output','output');
 
     function parse(filename, options) {
         var fullfilename=path.normalize(filename);
         if (!fs.existsSync(fullfilename)){
-            console.error(fullfilename+' file does not exist.');
+            console.error(fullfilename + ' file does not exist.');
             return null;
         }
         
         if (program.verbose) {
-            console.log('parsing '+fullfilename);
+            console.log('parsing ' + fullfilename);
         }
         
         var idltxt=fs.readFileSync(fullfilename,{encoding:'utf8'});
@@ -67,7 +70,7 @@
                 fs.mkdirSync(dname);
             }
         }
-        if (fs.existsSync(gfilename)){
+        if (fs.existsSync(gfilename) && !(program.append)){
             if (!program.force){
                 console.error(gfilename+' exists. use -f to force overwrite');
                 process.exit(-3);
@@ -87,17 +90,26 @@
         if (program.verbose) {
             console.log('generating '+gfilename.toLowerCase());
         }
-        fs.writeFileSync(gfilename.toLowerCase(),tpl(model,fmodel),{encoding:'utf8'});
+        var generatedText=tpl(model,fmodel);
+        generatedText=generatedText.replace(/(\s)*(\r\n?|\n)((\s)*(\r\n?|\n))+/g,'\n');
+        if (program.append) {
+            fs.appendFileSync(gfilename.toLowerCase(),generatedText,{encoding:'utf8'});
+        }
+        else{
+            fs.writeFileSync(gfilename.toLowerCase(),generatedText,{encoding:'utf8'});
+        }
     }
 
     program
         .command('parse [filename]')
         .description('parse the specified tidl file.')
         .option('-f, --format <type>','Output format [json]','json')
+        .option('-e, --outputexp <type>','Output JSON Path expression default: $.*','$.*')
         .action(function (filename, options){
             if (program.verbose) {
                 console.log('tidl %s',pack.version);
                 console.log('input file(s):\t %s',filename);
+                console.log('output expression:\t%s',options.outputexp)
                 console.log('output format:\t %s\n', options.format);
             }
             if (!filename) {
@@ -105,11 +117,14 @@
                 program.help();
                 process.exit(-1);
             }
-            var files=filename.split(',');
+            var files=[]; 
+            //files=filename.split(',');
+            files=glob.sync(filename, {});
+            
             files.forEach(function(val, index, array){
-                var results=parse(filename, options);
+                var results=parse(val, options);
                 if (options.format.toLowerCase()=='json' && results && results[0]){
-                    console.log(JSON.stringify(results[0].model,null,'\t'));
+                    console.log(JSON.stringify(jsonPath.eval(results[0].model,options.outputexp),null,'\t'));
                 }
             });
             process.exit(0);
@@ -120,12 +135,14 @@
         .command('generate [filename] [template]')
         .description('generate from the specified template.')
         .option('-t, --templatetype <type>','template type [bliss]','bliss')
+        .option('-x, --exclude <pattern>','exclude the template files that match the pattern')
         .action(function (filename, template, options) {
             if (program.verbose) {
                 console.log('tidl %s',pack.version);
                 console.log('input file(s):\t %s',filename);
                 console.log('output directory:\t %s',program.outputdir);
                 console.log('template directory/file:\t %s',template);
+                console.log('exclude template pattern:\t %s',options.exclude);
                 console.log('template type:\t %s\n', options.templatetype);
             }
             if (!filename) {
@@ -152,9 +169,9 @@
                 }
             }
 
-            var files=filename.split(',');
+            var files=glob.sync(filename, {});//filename.split(',');
             files.forEach(function(val, index, array){
-                var results=parse(filename, options);
+                var results=parse(val, options);
 
                 function generate(tfile){
                     var stat=fs.statSync(tfile);
@@ -166,6 +183,14 @@
                         return;
                     }
                     else{
+                        if (options.exclude!==undefined){
+                            if (minimatch(tfile,options.exclude, {matchBase: true })){
+                                if (program.verbose){
+                                    console.log('excluding template file: '+ tfile);
+                                }
+                                return;
+                            }
+                        }
                         var fname=path.basename(tfile);
                         var dname=path.dirname(tfile);
                         dname=path.join(outputdir, dname.substr(fulltemplatefilename.length));
