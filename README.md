@@ -28,13 +28,19 @@ in windows ...
 
   Commands:
 
-    parse [options] [filename] parse the specified tidl file.
+  parse [options] [filename] parse the specified tidl file.
+  generate [options] [filename] [template] generate from the specified template
 
-  Options:
 
-    -h, --help     output usage information
-    -V, --version  output the version number
-    -v --verbose   use verbose logging
+Options:
+
+  -h, --help             output usage information
+  -V, --version          output the version number
+  -v, --verbose          use verbose logging
+  -i, --include <type>   include additional overlay file in the same path [none, all, rest]
+  -F, --force            force overwrite existing files in output directory
+  -a, --append           append to existing files in output directory
+  -o, --outputdir <dir>  output directory default:output
 >
 ```
 
@@ -53,18 +59,8 @@ $ mkdir tidl
 $ cd tidl
 $ npm install https://github.com/rravuri/tidl/tarball/master
 $ .\node_modules\.bin\tidl
-
-  Usage: cli.js [options] [command]
-
-  Commands:
-
-    parse [options] [filename] parse the specified tidl file.
-
-  Options:
-
-    -h, --help     output usage information
-    -V, --version  output the version number
-    -v --verbose   use verbose logging
+  ...
+  ...
 $
 ```
 parse a tidl file to output the AST in json
