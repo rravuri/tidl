@@ -22,7 +22,7 @@
   "author": "Rakesh Ravuri",
   "license": "MIT",
   "dependencies": {
-    "commander": "2.1.x",
+    "commander": "2.2.x",
     "bliss":"1.0.x",
     "JSONPath":"0.10.x",
     "glob":"3.2.x",
