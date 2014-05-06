@@ -47,5 +47,5 @@
     "grunt-blanket": "0.0.8",
     "grunt-contrib-concat": "0.4.x"
   },
-  "engine":"node>=0.8.0"
+  "engine":"node>=0.10.0"
 }
