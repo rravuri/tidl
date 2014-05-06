@@ -6,7 +6,7 @@ Utilities for working with tidl files.
 Project Status
 --------------
 
-[![Build Status](https://travis-ci.org/rravuri/tidl.png?branch=master)](https://travis-ci.org/rravuri/tidl) [![Dependency Status](https://gemnasium.com/rravuri/tidl.png)](https://gemnasium.com/rravuri/tidl) [![Built with Grunt](https://cdn.gruntjs.com/builtwith.png)](http://gruntjs.com/)
+[![Build Status](https://travis-ci.org/rravuri/tidl.png?branch=master)](https://travis-ci.org/rravuri/tidl)[![Coverage Status](https://coveralls.io/repos/rravuri/tidl/badge.png)](https://coveralls.io/r/rravuri/tidl) [![Dependency Status](https://gemnasium.com/rravuri/tidl.png)](https://gemnasium.com/rravuri/tidl) [![Built with Grunt](https://cdn.gruntjs.com/builtwith.png)](http://gruntjs.com/)
 
 Usage
 -----
