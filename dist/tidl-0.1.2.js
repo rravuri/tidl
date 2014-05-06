@@ -660,6 +660,7 @@
             '2010': "Unexpected character: Expected a valid interface name.",
             '2011': "Unexpected character: Expected 'exposes' keyword.",
             '2012': "Mismatched Service. The Service Name in Service decleration and interface do not match.",
+            '2013': "Unexpected character. Expecting a valid service name.",
 
             '3001': "Standards: Suggested to start with a capital letter."
         }
@@ -1311,14 +1312,33 @@
                         }
                     }
                     else {
-                        if (sname !== '' && intf.Name !== '' && stream.peek() == '{') {
-                            intf.Service = sname;
-                            stream.next();
-                            state.tokenizers.shift();
-                            state.tokenizers.unshift(tokenizeInterfaceBody());
-                            return 'bracket';
+                        if (intf.Name !== '') {
+                            if (stream.peek() == '{') {
+                                if (sname !== '') {
+                                    intf.Service = sname;
+                                    stream.next();
+                                    state.tokenizers.shift();
+                                    state.tokenizers.unshift(tokenizeInterfaceBody());
+                                    return 'bracket';
+                                }
+                                else if (state.lastToken == 'k') {
+                                    state.setError(2013);
+                                }
+                                else
+                                {
+                                    state.setError(2011);
+                                }
+                            }
+                            else if (state.lastToken == 'k') {
+                                state.setError(2013);
+                            }
+                            else {
+                                state.setError(2010);
+                            }
                         }
-                        state.setError(2010);
+                        else {
+                            state.setError(2010);
+                        }
                     }
                 }
 
@@ -1891,6 +1911,17 @@
                 }
             }
         });
+        if (state.context.length>0) {
+            if (state.context[0] !== state.model){
+                msgs.push({
+                                line: lines.length,
+                                col: lines[lines.length-1].length-1,
+                                charcount: 1,
+                                code: '2003',
+                                type: 'error'
+                            });
+            }
+        }
         state.model.updateEndpoints(null);
         state.model.updateExceptionTypes(null);
         return { model: state.model, messages: msgs };

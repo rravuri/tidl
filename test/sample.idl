@@ -1,23 +1,26 @@
-@tidl 1.0.0;
-interface Algebra exposes MathService {
-	@description "
-Title
-=====
+@tidl 2.0.0;
+service MathService{
+	interface Sample exposes  {
+		@description "
+			Title
+			=====
 
-Overview of the Algebra Api
+			Overview of the Algebra Api
 
-Features
---------
-* Addition
-* Substraction
-";
+			Features
+			--------
+			* json
+			* Sum
+			* Difference
+		";
+	@version 1.0.0;
 
-	int add(int x,int y){
-		@description "add x & y";
-	}
+		int getSum(int x, int y){
+			@description "calculate x + y";
+		}
 
-	int substract(int x,int y){
-		@description "substract x & y";
-
+		int getDifference(int x, int y){
+			@description "calculate x-y";
+		}
 	}
 }

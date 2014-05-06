@@ -42,11 +42,20 @@ module.exports = function(grunt) {
 					captureFile: 'coverage.html'
 				},
 				src: ['coverage/test/**/*.js']
+			},
+			coveralls:{
+				options:{
+					reporter:'mocha-lcov-reporter',
+					quiet: true,
+					captureFile:'coverage/results/lcov.info'
+				},
+				src:['coverage/test/**/*.js']
 			}
 		},
 		clean: {
 			coverage: {
-				src: ['coverage/']
+				src: ['coverage/'],
+				force:true
 			}
 		},
 		copy: {
@@ -91,6 +100,6 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-copy');
 	grunt.loadNpmTasks('grunt-blanket');
 
-	grunt.registerTask('test', ['clean', 'jshint', 'blanket', 'copy', 'mochaTest']);
+	grunt.registerTask('test', ['clean', 'jshint', 'blanket', 'copy', 'mochaTest', 'coveralls']);
 	grunt.registerTask('build', ['uglify']);
 };

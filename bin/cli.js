@@ -72,7 +72,7 @@
         }
         if (fs.existsSync(gfilename) && !(program.append)){
             if (!program.force){
-                console.error(gfilename+' exists. use -f to force overwrite');
+                console.error(gfilename+' exists. use -F to force overwrite');
                 process.exit(-3);
             }
             else {
