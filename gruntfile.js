@@ -39,7 +39,7 @@ module.exports = function(grunt) {
 				options: {
 					reporter: 'html-cov',
 					quiet: true,
-					captureFile: 'coverage.html'
+					captureFile: 'coverage/results/coverage.html'
 				},
 				src: ['coverage/test/**/*.js']
 			},
@@ -100,6 +100,7 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-copy');
 	grunt.loadNpmTasks('grunt-blanket');
 
+	grunt.registerTask('qtest',['mochaTest'])
 	grunt.registerTask('test', ['clean', 'jshint', 'blanket', 'copy', 'mochaTest', 'coveralls']);
 	grunt.registerTask('build', ['uglify']);
 };
