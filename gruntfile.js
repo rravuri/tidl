@@ -21,7 +21,7 @@ module.exports = function(grunt) {
 			},
 			build: {
 				files: {
-					'dist/<%= pkg.name %>-<%= pkg.version %>.min.js': ["lib/main.js"]
+					'dist/<%= pkg.name %>-<%= pkg.version %>.min.js': ["lib/<%= pkg.name %>.js"]
 				}
 			}
 		},
@@ -54,13 +54,29 @@ module.exports = function(grunt) {
 		},
 		clean: {
 			coverage: {
-				src: ['coverage/'],
+				src: ['coverage/','lib/<%= pkg.name %>.js'],
 				force:true
+			}
+		},
+		concat: {
+			options: {
+				separator: "\n", //add a new line after each file
+				//added before everything
+				banner: '(function () {\n"uses strict;";\nvar tidl={};\n',
+
+					//added after everything
+				footer: "var root = this, previous_tidl = root.tidl;\nif (typeof module !== 'undefined' && module.exports) {\nmodule.exports = tidl;\n}\nelse {\nroot.tidl = tidl;\n}\n\ntidl.noConflict = function () {\nroot.tidl = previous_tidl;\nreturn tidl;\n};\n})(this);"
+			},
+			dist: {
+				// the files to concatenate
+				src: ['src/**/*.js'],
+				// the location of the resulting JS file
+				dest: 'lib/<%= pkg.name %>.js'
 			}
 		},
 		copy: {
 			main:{
-				src:'lib/main.js',
+				src:'lib/<%= pkg.name %>.js',
 				dest:'dist/<%= pkg.name %>-<%= pkg.version %>.js'
 			},
 			coverage: {
@@ -94,14 +110,15 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-bump');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-contrib-jshint');
+	grunt.loadNpmTasks('grunt-contrib-concat');
 	grunt.loadNpmTasks('grunt-mocha-test');
 	grunt.loadNpmTasks('grunt-coveralls');
 	grunt.loadNpmTasks('grunt-contrib-clean');
 	grunt.loadNpmTasks('grunt-contrib-copy');
 	grunt.loadNpmTasks('grunt-blanket');
 
-	grunt.registerTask('default',[]);
-	grunt.registerTask('qtest',['mochaTest']);
-	grunt.registerTask('test', ['clean', 'jshint', 'blanket', 'copy', 'mochaTest']);
-	grunt.registerTask('build', ['uglify']);
+	grunt.registerTask('default',['concat']);
+	grunt.registerTask('qtest',['concat', 'mochaTest']);
+	grunt.registerTask('test', ['clean', 'concat', 'jshint', 'blanket', 'copy', 'mochaTest']);
+	grunt.registerTask('build', ['concat', 'uglify']);
 };

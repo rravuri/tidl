@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 ;(function(){ // wrapper in case we're in module_context mode
-    var tidl = require('../lib/main');
+    var tidl = require('../lib/tidl');
     var program = require('commander');
     var pack = require('../package.json');
     var fs=require('fs');
