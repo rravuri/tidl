@@ -121,6 +121,14 @@ var tidl={};
         sutil.splitLines = CodeMirror.splitLines;
     }
     
+    
+    function fnFindInList(list,name) {
+        for(i=0;i<list.length;++i){
+            if (list[i].Name==name) return list[i];
+        }
+        return null;
+    }
+
     function fnGetAttribute(name,value0) {
         for (i = 0; i < this.Attributes.length; ++i) {
             var attr = this.Attributes[i];
@@ -240,6 +248,21 @@ var tidl={};
 
         this.getAttribute = fnGetAttribute;
         this.getDescription = fnGetDescription;
+        this.getOperation = function(name) {
+            return fnFindInList(this.Operations, name);
+        };
+        this.getType = function(name) {
+            return fnFindInList(this.Types, name);
+        };
+        this.getEnumeration = function(name) {
+            return fnFindInList(this.Enumerations, name);
+        };
+        this.getEvent = function(name) {
+            return fnFindInList(this.Events, name);
+        };
+        this.getException = function(name) {
+            return fnFindInList(this.Exceptions, name);
+        };
         return this;
     }
 
@@ -282,7 +305,23 @@ var tidl={};
         this.Enumerations = [];
         this.Exceptions = [];
         this.Events = [];
-        this.Interfaces = {};
+        this.Interfaces = {}; 
+
+        this.getAttribute = fnGetAttribute;
+        this.getDescription = fnGetDescription;
+
+        this.getType = function(name) {
+            return fnFindInList(this.Types, name);
+        };
+        this.getEnumeration = function(name) {
+            return fnFindInList(this.Enumerations, name);
+        };
+        this.getEvent = function(name) {
+            return fnFindInList(this.Events, name);
+        };
+        this.getException = function(name) {
+            return fnFindInList(this.Exceptions, name);
+        };
         return this;
     }
 

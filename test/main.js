@@ -121,6 +121,16 @@ describe('tidl', function() {
 	    	msg.col.should.be.equal(0);
 	    });
 
+ 		it('should report an error for bad attribute.',function() {
+	        var res=tidl.parse('@1313');
+	    	var msg=from(res.messages).where(function(m){return m.code=='2001'}).firstOrDefault();
+	    	assert.notEqual(msg,null,'there should be an message with code 2001');
+	    	assert.notEqual(msg,undefined,'there should be an message with code 2001');
+	    	msg.type.should.be.equal('error');
+	    	msg.line.should.be.equal(1);
+	    	msg.col.should.be.equal(0);
+	    });
+
  		it('should report an warning for missing tidl attribute.',function() {
 	        var res=tidl.parse('@description "test";');
 	    	var msg=from(res.messages).where(function(m){return m.code=='1001'}).firstOrDefault();
@@ -213,8 +223,8 @@ describe('tidl', function() {
 	 		it('should report an error for bad syntax.',function() {
 	 			var res=tidl.parse('@tidl "error";');
 		    	var msg=from(res.messages).where(function(m){return m.code=='2003'}).firstOrDefault();
-		    	assert.notEqual(msg,null,'there should be an message with code 2003');
-		    	assert.notEqual(msg,undefined,'there should be an message with code 2003');
+		    	assert.notEqual(msg,null,'there should be a message with code 2003');
+		    	assert.notEqual(msg,undefined,'there should be a message with code 2003');
 		    	msg.type.should.be.equal('error');
 		    	msg.line.should.be.equal(1);
 		    	msg.col.should.be.equal(6);
@@ -223,11 +233,29 @@ describe('tidl', function() {
 	 		it('should report an error for bad syntax.',function() {
 	 			var res=tidl.parse('@tidl ;');
 		    	var msg=from(res.messages).where(function(m){return m.code=='2003'}).firstOrDefault();
-		    	assert.notEqual(msg,null,'there should be an message with code 2003');
-		    	assert.notEqual(msg,undefined,'there should be an message with code 2003');
+		    	assert.notEqual(msg,null,'there should be a message with code 2003');
+		    	assert.notEqual(msg,undefined,'there should be a message with code 2003');
 		    	msg.type.should.be.equal('error');
 		    	msg.line.should.be.equal(1);
 		    	msg.col.should.be.equal(6);
+	 		});
+	 		it('should report a warning for additional parameters.',function() {
+	 			var res=tidl.parse('@tidl 1.0.0,"test";');
+		    	var msg=from(res.messages).where(function(m){return m.code=='1002'}).firstOrDefault();
+		    	assert.notEqual(msg,null,'there should be a message with code 1002');
+		    	assert.notEqual(msg,undefined,'there should be a message with code 1002');
+		    	msg.type.should.be.equal('warning');
+		    	msg.line.should.be.equal(1);
+		    	msg.col.should.be.equal(12);
+	 		});
+	 		it('should report a warning for duplicate attribute.',function() {
+	 			var res=tidl.parse('@tidl 1.0.0;\n@tidl 1.0.0;');
+		    	var msg=from(res.messages).where(function(m){return m.code=='1004'}).firstOrDefault();
+		    	assert.notEqual(msg,null,'there should be a message with code 1004');
+		    	assert.notEqual(msg,undefined,'there should be a message with code 1004');
+		    	msg.type.should.be.equal('warning');
+		    	msg.line.should.be.equal(2);
+		    	msg.col.should.be.equal(0);
 	 		});
 	 	});
 
