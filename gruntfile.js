@@ -33,7 +33,7 @@ module.exports = function(grunt) {
 				options: {
 					reporter: 'spec'
 				},
-				src: ['coverage/test/**/*.js']
+				src: ['test/**/*.js']
 			},
 			coverage: {
 				options: {
@@ -41,7 +41,7 @@ module.exports = function(grunt) {
 					quiet: true,
 					captureFile: 'coverage/results/coverage.html'
 				},
-				src: ['coverage/test/**/*.js']
+				src: ['test/**/*.js']
 			},
 			coveralls:{
 				options:{
@@ -49,7 +49,7 @@ module.exports = function(grunt) {
 					quiet: true,
 					captureFile:'coverage/results/lcov.info'
 				},
-				src:['coverage/test/**/*.js']
+				src:['test/**/*.js']
 			}
 		},
 		clean: {
@@ -78,10 +78,6 @@ module.exports = function(grunt) {
 			main:{
 				src:'lib/<%= pkg.name %>.js',
 				dest:'dist/<%= pkg.name %>-<%= pkg.version %>.js'
-			},
-			coverage: {
-				src: ['test/**'],
-				dest: 'coverage/'
 			}
 		},
 		blanket: {

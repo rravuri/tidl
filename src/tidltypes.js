@@ -1,21 +1,18 @@
-    
-    
-    function fnFindInList(list,name) {
-        for(i=0;i<list.length;++i){
-            if (list[i].Name==name) return list[i];
+    function fnFindInList(list, name) {
+        for (i = 0; i < list.length; ++i) {
+            if (list[i].Name == name) return list[i];
         }
         return null;
     }
 
-    function fnGetAttribute(name,value0) {
+    function fnGetAttribute(name, value0) {
         for (i = 0; i < this.Attributes.length; ++i) {
             var attr = this.Attributes[i];
             if (attr.Name == name) {
-                if (value0!==undefined){
-                    if (attr.Values[0]==value0)
+                if (value0 !== undefined) {
+                    if (attr.Values[0] == value0)
                         return attr;
-                }
-                else
+                } else
                     return attr;
             }
         }
@@ -44,7 +41,7 @@
         newattr.Values = this.Values.concat([]);
         return newattr;
     };
-   
+
     function IdlType() {
         this.Name = '';
         this.Types = [];
@@ -183,7 +180,7 @@
         this.Enumerations = [];
         this.Exceptions = [];
         this.Events = [];
-        this.Interfaces = {}; 
+        this.Interfaces = {};
 
         this.getAttribute = fnGetAttribute;
         this.getDescription = fnGetDescription;
@@ -276,6 +273,7 @@
         ["cancel", "DELETE", "", ""],
         ["close", "DELETE", "", ""]
     ];
+
     function formatRoute(route) {
         //Clean the route structure before returning it
         route = route.replace("//", "/");
@@ -325,6 +323,7 @@
 
         return value;
     }
+
     function getPostMethods(op, intfAnno) {
         //Check if method override exists in annotation file
         var method = readOperationAttributeFromAnnontationFile(op, intfAnno, AnnotationAttribute_HttpMethod);
@@ -367,14 +366,10 @@
 
         if ((route === null || route === undefined || route === '')) {
             //Mandatory parameters except of type set or list, are excluded from querystring (since they are part of route)
-            if (p.Mandatory &&
-                !((p.Type.Name.indexOf("set") === 0) || (p.Type.Name.indexOf("list") === 0)
-                    )
-                ) {
+            if (p.Mandatory && !((p.Type.Name.indexOf("set") === 0) || (p.Type.Name.indexOf("list") === 0))) {
                 return true;
             }
-        }
-        else {
+        } else {
             //If the route is provided via annonation file, then route parameters are excluded from querystring
             if (route.indexOf('{' + p.Name + '}') > 0) {
                 return true;
@@ -407,7 +402,12 @@
         for (var pn in op.Parameters) {
             var p = op.Parameters[pn];
             if (excludeParameterFromQuerystring(p, route, bodyParam)) continue;
-            if (isf) { sb += "?"; isf = false; } else { sb += "&"; }
+            if (isf) {
+                sb += "?";
+                isf = false;
+            } else {
+                sb += "&";
+            }
             sb += (getParam(p) + "={" + getParam(p) + "...}");
         }
         return sb;
@@ -419,7 +419,7 @@
         if (route && route !== '') {
             return formatRoute(route);
         }
-        
+
         var i = 0;
         var h = null;
         for (i = 0; i < HttpVerbsMapping.length; ++i) {
@@ -431,8 +431,13 @@
         }
         route = (h !== null) ? h[2] : "";
         var opn = op.Name;
-        if (endsWith(op.Name, "Feed")) { route += "feed"; opn = opn.substr(0, opn.length - 4); }
-        if (endsWith(op.Name.toLowerCase(), intf.Name.toLowerCase())) { opn = opn.substr(0, opn.length - intf.Name.length); }
+        if (endsWith(op.Name, "Feed")) {
+            route += "feed";
+            opn = opn.substr(0, opn.length - 4);
+        }
+        if (endsWith(op.Name.toLowerCase(), intf.Name.toLowerCase())) {
+            opn = opn.substr(0, opn.length - intf.Name.length);
+        }
         var roppart = "";
 
         if (h !== null && (h[0].length != opn.length)) {
@@ -448,15 +453,12 @@
                 if (endsWith(roppart.toLowerCase(), "by" + p.Name.toLowerCase()) || endsWith(roppart.toLowerCase(), "to" + p.Name.toLowerCase())) {
                     s = "/{" + p.Name.toLowerCase() + "}" + roppart.substr(0, roppart.length - (p.Name.length + 2));
                     roppart = s;
-                }
-                else if (endsWith(roppart.toLowerCase(), "from" + p.Name.toLowerCase())) {
+                } else if (endsWith(roppart.toLowerCase(), "from" + p.Name.toLowerCase())) {
                     s = "/{" + p.Name.toLowerCase() + "}" + roppart.substr(0, roppart.length - (p.Name.length + 4));
                     roppart = s;
-                }
-                else if (endsWith(roppart.toLowerCase(), p.Name.toLowerCase())) {
+                } else if (endsWith(roppart.toLowerCase(), p.Name.toLowerCase())) {
                     roppart = "/{" + p.Name.toLowerCase() + "}";
-                }
-                else {
+                } else {
                     qp += "/{" + p.Name.toLowerCase() + "}";
                 }
             }
@@ -464,25 +466,23 @@
         route += roppart;
         if (h !== null && !(h[3] === null || h[3] === '')) {
             route += "/" + h[3];
-        }
-        else if (h !== null && (h[3] === null || h[3] === '') && h[1].toLowerCase() != getPostMethods(op, intfAnno).toLowerCase()) {
+        } else if (h !== null && (h[3] === null || h[3] === '') && h[1].toLowerCase() != getPostMethods(op, intfAnno).toLowerCase()) {
             route += "/" + h[0];
-        }
-        else if (h === null && endsWith(opn.toLowerCase(), intf.Name.toLowerCase())) {
+        } else if (h === null && endsWith(opn.toLowerCase(), intf.Name.toLowerCase())) {
             route += "/" + opn.toLowerCase().substr(0, opn.length - intf.Name.length);
         }
 
         route += qp;
         return formatRoute(route);
     }
-    
+
     function getHttpErrorCodeForException(exceptionType, annoModel) {
-        
+
         var httpErrorStatus = '500';
         var ex, e, errorStatusAttrib;
         if (annoModel === null || annoModel === undefined)
             return httpErrorStatus;
-        
+
         //Try to match the exception in common exceptions from annotated model
         for (ex in annoModel.Exceptions) {
             e = annoModel.Exceptions[ex];
@@ -492,7 +492,7 @@
                     return errorStatusAttrib.Values[0].trim();
             }
         }
-        
+
         //Try to match the exception in interface exceptions from annotated model
         for (var intfAnnoN in annoModel.Interfaces) {
             intfAnno = annoModel.Interfaces[intfAnnoN];
@@ -506,13 +506,17 @@
                 }
             }
         }
-        
+
         return httpErrorStatus.trim();
 
     }
 
-    IdlModel.prototype.Version = function () {
-        var v = { Major: 0, Minor: 0, Build: 0 };
+    IdlModel.prototype.Version = function() {
+        var v = {
+            Major: 0,
+            Minor: 0,
+            Build: 0
+        };
 
         for (i = 0; i < this.Attributes.length; ++i) {
             if (this.Attributes[i].Name == 'version') {
@@ -527,8 +531,12 @@
     };
 
 
-    IdlIntf.prototype.Version = function () {
-        var v = { Major: 0, Minor: 0, Build: 0 };
+    IdlIntf.prototype.Version = function() {
+        var v = {
+            Major: 0,
+            Minor: 0,
+            Build: 0
+        };
 
         for (i = 0; i < this.Attributes.length; ++i) {
             if (this.Attributes[i].Name == 'version') {
@@ -542,7 +550,7 @@
         return v;
     };
 
-    IdlModel.prototype.updateEndpoints = function (annoModel) {
+    IdlModel.prototype.updateEndpoints = function(annoModel) {
         var idlModel = this;
         var i;
         var intfAnno;
@@ -551,13 +559,11 @@
             if (annoModel) {
                 try {
                     intfAnno = annoModel.Interfaces[infn];
+                } catch (e) {
+                    intfAnno = null;
                 }
-                catch (e) {
-                    intfAnno=null;
-                }
-            }
-            else{
-                intfAnno=null;
+            } else {
+                intfAnno = null;
             }
             for (var opi in intf.Operations) {
                 var op = intf.Operations[opi];
@@ -574,8 +580,7 @@
                     //,Type = IdlAttr.IdlAttrType.String
 
                     op.Attributes.push(restendpoint);
-                }
-                else {
+                } else {
                     restendpoint.Values = [];
                 }
                 var majorVersion = intf.Version().Major === 0 ? idlModel.Version().Major : intf.Version().Major;
@@ -587,12 +592,12 @@
             }
         }
     };
-    
-    IdlModel.prototype.updateExceptionTypes = function (annoModel) {
+
+    IdlModel.prototype.updateExceptionTypes = function(annoModel) {
         var idlModel = this;
         var i, exi, ex;
 
-       
+
         //Update common exception types in model
         for (exi in idlModel.Exceptions) {
             ex = idlModel.Exceptions[exi];
@@ -609,8 +614,7 @@
                 //,Type = IdlAttr.IdlAttrType.String
 
                 ex.Attributes.push(restHttpStatusCommon);
-            }
-            else {
+            } else {
                 restHttpStatusCommon.Values = [];
             }
             restHttpStatusCommon.Values.push(getHttpErrorCodeForException(ex, annoModel));
@@ -635,8 +639,7 @@
                     //,Type = IdlAttr.IdlAttrType.String
 
                     ex.Attributes.push(restHttpStatus);
-                }
-                else {
+                } else {
                     restHttpStatus.Values = [];
                 }
                 restHttpStatus.Values.push(getHttpErrorCodeForException(ex, annoModel));
@@ -645,14 +648,14 @@
     };
 
 
-    tidl.IdlModel= IdlModel;
-    tidl.IdlAttr= IdlAttr;
-    tidl.IdlIntf= IdlIntf;
-    tidl.IdlOps= IdlOps;
-    tidl.IdlType= IdlType;
-    tidl.IdlParam= IdlParam;
+    tidl.IdlModel = IdlModel;
+    tidl.IdlAttr = IdlAttr;
+    tidl.IdlIntf = IdlIntf;
+    tidl.IdlOps = IdlOps;
+    tidl.IdlType = IdlType;
+    tidl.IdlParam = IdlParam;
 
-    tidl.Messages= {
+    tidl.Messages = {
         '1000': 'Unknown error',
         '1001': "Unsupported attribute: Expecting 'tidl' attribute.",
         '1002': "Unused value: Will be ignored.",
