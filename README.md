@@ -3,7 +3,7 @@ tidl
 
 Utilities for working with tidl files.
 
-Project Status
+Current Status
 --------------
 
 [![Build Status](https://travis-ci.org/rravuri/tidl.png?branch=master)](https://travis-ci.org/rravuri/tidl) [![Coverage Status](https://coveralls.io/repos/rravuri/tidl/badge.png)](https://coveralls.io/r/rravuri/tidl) [![Dependency Status](https://gemnasium.com/rravuri/tidl.png)](https://gemnasium.com/rravuri/tidl) [![Built with Grunt](https://cdn.gruntjs.com/builtwith.png)](http://gruntjs.com/)
@@ -14,7 +14,7 @@ Usage
 ### Using node
 tidl parser can be installed and managed via [npm](https://npmjs.org/), the [Node.js](http://nodejs.org/) package manager.
 
-tidl parser requires stable [Node.js](http://nodejs.org/) versions `>= 0.8.0`. Odd version numbers of [Node.js](http://nodejs.org/) are considered unstable development versions.
+tidl parser requires stable [Node.js](http://nodejs.org/) versions `>= 0.10.0`. Odd version numbers of [Node.js](http://nodejs.org/) are considered unstable development versions.
 
 
 in windows ...
