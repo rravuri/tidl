@@ -2,7 +2,7 @@
   "name": "tidl",
   "version": "0.1.2",
   "description": "Utility functions for tidl files",
-  "main": "lib/main.js",
+  "main": "lib/tidl.js",
   "bin": {
     "tidl": "./bin/cli.js"
   },
