@@ -27,6 +27,23 @@
         return null;
     }
 
+    function fnGetVersion() {
+        var v = {
+            Major: 0,
+            Minor: 0,
+            Build: 0
+        };
+
+        var attr = this.getAttribute('version');
+        if (attr !== null) {
+            var d = attr.Values[0].split('.');
+            v.Major = d[0];
+            v.Minor = d[1];
+            v.Build = d[2];
+        }
+        return v;
+    }
+
     function IdlAttr() {
         this.Name = '';
         this.Type = 'String';
@@ -123,6 +140,7 @@
 
         this.getAttribute = fnGetAttribute;
         this.getDescription = fnGetDescription;
+        this.Version = fnGetVersion;
         this.getOperation = function(name) {
             return fnFindInList(this.Operations, name);
         };
@@ -184,6 +202,7 @@
 
         this.getAttribute = fnGetAttribute;
         this.getDescription = fnGetDescription;
+        this.Version = fnGetVersion;
 
         this.getType = function(name) {
             return fnFindInList(this.Types, name);
@@ -510,45 +529,6 @@
         return httpErrorStatus.trim();
 
     }
-
-    IdlModel.prototype.Version = function() {
-        var v = {
-            Major: 0,
-            Minor: 0,
-            Build: 0
-        };
-
-        for (i = 0; i < this.Attributes.length; ++i) {
-            if (this.Attributes[i].Name == 'version') {
-                var d = this.Attributes[i].Values[0].split('.');
-                v.Major = d[0];
-                v.Minor = d[1];
-                v.Build = d[2];
-                break;
-            }
-        }
-        return v;
-    };
-
-
-    IdlIntf.prototype.Version = function() {
-        var v = {
-            Major: 0,
-            Minor: 0,
-            Build: 0
-        };
-
-        for (i = 0; i < this.Attributes.length; ++i) {
-            if (this.Attributes[i].Name == 'version') {
-                var d = this.Attributes[i].Values[0].split('.');
-                v.Major = d[0];
-                v.Minor = d[1];
-                v.Build = d[2];
-                break;
-            }
-        }
-        return v;
-    };
 
     IdlModel.prototype.updateEndpoints = function(annoModel) {
         var idlModel = this;
