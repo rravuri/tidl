@@ -1,5 +1,5 @@
 var should = require('should');
-var tidl = require('../lib/tidl');
+var tidl = require('../coverage/lib/tidl');
 var assert = require("assert");
 var from=require('fromjs');
 

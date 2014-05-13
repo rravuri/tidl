@@ -114,7 +114,7 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-blanket');
 
 	grunt.registerTask('default',['concat']);
-	grunt.registerTask('qtest',['concat', 'mochaTest:test']);
+	grunt.registerTask('qtest',['concat', 'blanket', 'mochaTest:test']);
 	grunt.registerTask('test', ['clean', 'concat', 'jshint', 'blanket', 'copy', 'mochaTest']);
 	grunt.registerTask('build', ['concat', 'uglify']);
 };
