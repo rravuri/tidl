@@ -100,6 +100,25 @@ module.exports = function(grunt) {
 				// Target-specific LCOV coverage file
 				src: 'coverage/results/*.info'
 			}
+		},
+		watch:{
+			options: {
+				dateFormat: function(time) {
+					grunt.log.writeln('The watch finished in ' + time + 'ms at' + (new Date()).toString());
+					grunt.log.writeln('Waiting for more changes...');
+				},
+				spawn:false
+			},
+			src:{
+				files: ['src/**/*.js', 'test/**/*.js'],
+				tasks:['qtest']
+			},
+			configFiles: {
+				files: [ 'Gruntfile.js'],
+				options: {
+					reload: true
+				}
+			}
 		}
 	});
 
@@ -112,6 +131,7 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-clean');
 	grunt.loadNpmTasks('grunt-contrib-copy');
 	grunt.loadNpmTasks('grunt-blanket');
+	grunt.loadNpmTasks('grunt-contrib-watch');
 
 	grunt.registerTask('default',['concat']);
 	grunt.registerTask('qtest',['concat', 'blanket', 'mochaTest:test']);

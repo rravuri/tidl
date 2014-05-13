@@ -23,14 +23,14 @@
   "license": "MIT",
   "dependencies": {
     "commander": "2.2.x",
-    "bliss":"1.0.x",
-    "JSONPath":"0.10.x",
-    "glob":"3.2.x",
-    "minimatch":"0.2.x",
-    "fromjs":"2.1.x"
+    "bliss": "1.0.x",
+    "JSONPath": "0.10.x",
+    "glob": "3.2.x",
+    "minimatch": "0.2.x",
+    "fromjs": "2.1.x"
   },
   "devDependencies": {
-    "fromjs":"2.1.x",
+    "fromjs": "2.1.x",
     "mocha": "1.18.x",
     "should": "3.3.x",
     "grunt": "0.4.x",
@@ -46,7 +46,8 @@
     "grunt-coveralls": "0.3.x",
     "grunt-contrib-copy": "0.5.x",
     "grunt-blanket": "0.0.8",
-    "grunt-contrib-concat": "0.4.x"
+    "grunt-contrib-concat": "0.4.x",
+    "grunt-contrib-watch": "0.6.x"
   },
-  "engine":"node>=0.10.0"
+  "engine": "node>=0.10.0"
 }
