@@ -128,35 +128,128 @@ describe('@description', function() {
 	  	msg.line.should.be.equal(2);
 	  	msg.col.should.be.equal(20);
 	});
-	it('should report a warning more than one instance is specified in a scope'
-		// ,function(){
-		// var idl='interface A exposes S { \n'+
-		// '@description "test";\n'+
-		// '@description "test2";\n'+
-		// ' }';
-		// var res=tidl.parse(idl);
-		// console.log(res.messages);
-  		//   	var msg=from(res.messages).where(function(m){return m.code=='2003'}).firstOrDefault();
-  		//   	assert.notEqual(msg,null,'there should be an message with code 2003');
-  		//   	assert.notEqual(msg,undefined,'there should be an message with code 2003');
-  		//   	msg.type.should.be.equal('error');
-  		//   	msg.line.should.be.equal(2);
-  		//   	msg.col.should.be.equal(13);
-		// }
+	it('should report an error more than one instance is specified for a service'
+		,function(){
+		var idl='@tidl 2.0.0;\nservice S { \n'+
+		'@description "test";\n'+
+		'@description "test2";\n'+
+		' }';
+		var res=tidl.parse(idl);
+  		  	var msg=from(res.messages).where(function(m){return m.code=='2007'}).firstOrDefault();
+  		  	assert.notEqual(msg,null,'there should be an message with code 2007');
+  		  	assert.notEqual(msg,undefined,'there should be an message with code 2007');
+  		  	msg.type.should.be.equal('error');
+  		  	msg.line.should.be.equal(4);
+  		  	msg.col.should.be.equal(0);
+		}
+	);
+	it('should report an error more than one instance is specified for an interface'
+		,function(){
+		var idl='interface A exposes S { \n'+
+		'@description "test";\n'+
+		'@description "test2";\n'+
+		' }';
+		var res=tidl.parse(idl);
+  		  	var msg=from(res.messages).where(function(m){return m.code=='2007'}).firstOrDefault();
+  		  	assert.notEqual(msg,null,'there should be an message with code 2007');
+  		  	assert.notEqual(msg,undefined,'there should be an message with code 2007');
+  		  	msg.type.should.be.equal('error');
+  		  	msg.line.should.be.equal(3);
+  		  	msg.col.should.be.equal(0);
+		}
+	);
+	it('should report an error more than one instance is specified for a operation'
+		,function(){
+		var idl='interface A exposes S { \n'+
+		'void add(int x,int y){\n'+
+		'@description "test";\n'+
+		'@description "test2";\n'+
+		' }}';
+		var res=tidl.parse(idl);
+  		  	var msg=from(res.messages).where(function(m){return m.code=='2007'}).firstOrDefault();
+  		  	assert.notEqual(msg,null,'there should be an message with code 2007');
+  		  	assert.notEqual(msg,undefined,'there should be an message with code 2007');
+  		  	msg.type.should.be.equal('error');
+  		  	msg.line.should.be.equal(4);
+  		  	msg.col.should.be.equal(0);
+		}
+	);
+	it('should report an error more than one instance is specified for a type'
+		,function(){
+		var idl='interface A exposes S { \n'+
+		'type add(int x,int y){\n'+
+		'@description "test";\n'+
+		'@description "test2";\n'+
+		' }}';
+		var res=tidl.parse(idl);
+  		  	var msg=from(res.messages).where(function(m){return m.code=='2007'}).firstOrDefault();
+  		  	assert.notEqual(msg,null,'there should be an message with code 2007');
+  		  	assert.notEqual(msg,undefined,'there should be an message with code 2007');
+  		  	msg.type.should.be.equal('error');
+  		  	msg.line.should.be.equal(4);
+  		  	msg.col.should.be.equal(0);
+		}
+	);
+	it('should report an error more than one instance is specified for an event'
+		,function(){
+		var idl='interface A exposes S { \n'+
+		'event Event(int x,int y){\n'+
+		'@description "test";\n'+
+		'@description "test2";\n'+
+		' }}';
+		var res=tidl.parse(idl);
+  		  	var msg=from(res.messages).where(function(m){return m.code=='2007'}).firstOrDefault();
+  		  	assert.notEqual(msg,null,'there should be an message with code 2007');
+  		  	assert.notEqual(msg,undefined,'there should be an message with code 2007');
+  		  	msg.type.should.be.equal('error');
+  		  	msg.line.should.be.equal(4);
+  		  	msg.col.should.be.equal(0);
+		}
+	);
+	it('should report an error more than one instance is specified for an exception'
+		,function(){
+		var idl='interface A exposes S { \n'+
+		'exception Error(int x,int y){\n'+
+		'@description "test";\n'+
+		'@description "test2";\n'+
+		' }}';
+		var res=tidl.parse(idl);
+  		  	var msg=from(res.messages).where(function(m){return m.code=='2007'}).firstOrDefault();
+  		  	assert.notEqual(msg,null,'there should be an message with code 2007');
+  		  	assert.notEqual(msg,undefined,'there should be an message with code 2007');
+  		  	msg.type.should.be.equal('error');
+  		  	msg.line.should.be.equal(4);
+  		  	msg.col.should.be.equal(0);
+		}
+	);
+	it('should report an error more than one instance is specified for an enumeration'
+		,function(){
+		var idl='interface A exposes S { \n'+
+		'enumeration Enum(X,Y){\n'+
+		'@description "test";\n'+
+		'@description "test2";\n'+
+		' }}';
+		var res=tidl.parse(idl);
+  		  	var msg=from(res.messages).where(function(m){return m.code=='2007'}).firstOrDefault();
+  		  	assert.notEqual(msg,null,'there should be an message with code 2007');
+  		  	assert.notEqual(msg,undefined,'there should be an message with code 2007');
+  		  	msg.type.should.be.equal('error');
+  		  	msg.line.should.be.equal(4);
+  		  	msg.col.should.be.equal(0);
+		}
 	);
 	it('should report a warning if more than one values are specified'
-		// ,function(){
-		// 	var idl='interface A exposes S { \n'+
-		// 	'@description "test","test2";\n'+
-		// 	' }';
-		//	var res=tidl.parse(idl);
-		// 	console.log(res.messages);
-		//  var msg=from(res.messages).where(function(m){return m.code=='2001'}).firstOrDefault();
-	 	//  assert.notEqual(msg,null,'there should be an message with code 2003');
-	 	//  assert.notEqual(msg,undefined,'there should be an message with code 2003');
-	 	//  msg.type.should.be.equal('error');
-	 	//  msg.line.should.be.equal(2);
-	 	//  msg.col.should.be.equal(13);
-		// }
+		,function(){
+			var idl='interface A exposes S { \n'+
+			'@description "test","test2";\n'+
+			' }';
+			var res=tidl.parse(idl);
+		 var msg=from(res.messages).where(function(m){return m.code=='1002'}).firstOrDefault();
+	 	 assert.notEqual(msg,null,'there should be an message with code 1002');
+	 	 assert.notEqual(msg,undefined,'there should be an message with code 1002');
+	 	 msg.type.should.be.equal('warning');
+	 	 msg.line.should.be.equal(2);
+	 	 msg.col.should.be.equal(20);
+		}
 	)
 });
