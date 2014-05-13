@@ -793,7 +793,7 @@ var tidl={};
         '2004': "Unexpected character: Expecting an ID as the first value for the attributes 'parameter', 'exception' or 'value'.",
         '2005': "Unexpected character: Expecting an n.n.n version as the first value for the attributes 'tidl', 'version', 'since' or 'revision'.",
         '2006': "Unexpected character: Expecting a string as the first value for the attribute.",
-        '2007': "",
+        '2007': "Duplicate: there can only be one instance per scope.",
         '2008': "",
         '2009': "",
         '2010': "Unexpected character: Expected a valid interface name.",
@@ -1175,6 +1175,16 @@ var tidl={};
                             'revision', 'exception', 'return', 'value', 'seealso'], attribute.Name) === false) {
                             state.setWarn(1007);
                         }
+                        if (contains(['description', 'since','method','urlTemplate','bodyParam',
+                            'return', 'seealso'], attribute.Name)) {
+                            try {
+                                if (contains(obj.Attributes, function (a) { return a.Name == attribute.Name; })) {
+                                    state.setError(2007);
+                                }
+                            }
+                            catch (e) {
+                            }
+                        }
                         state.context.unshift(attribute);
                         state.tokenizers.unshift(tokenizeAttribute());
                         return "attribute em" + state.ec;
@@ -1324,6 +1334,16 @@ var tidl={};
                             'revision', 'author', 'reviewer', 'organisation',
                             'namespacePrefix', 'organisationDomainName'], attribute.Name) === false) {
                             state.setWarn(1003);
+                        }
+                        if (contains(['description', 'version','organisation',
+                            'namespacePrefix','organisationDomainName'], attribute.Name)) {
+                            try {
+                                if (contains(intf.Attributes, function (a) { return a.Name == attribute.Name; })) {
+                                    state.setError(2007);
+                                }
+                            }
+                            catch (e) {
+                            }
                         }
                         state.context.unshift(attribute);
                         state.tokenizers.unshift(tokenizeAttribute());
@@ -1536,6 +1556,16 @@ var tidl={};
                             'namespacePrefix', 'organisationDomainName'], attribute.Name) === false) {
                             state.setWarn(1006);
                         }
+                        if (contains(['description', 'organisation','organisationDomainName',
+                            'namespacePrefix'], attribute.Name)) {
+                            try {
+                                if (contains(model.Attributes, function (a) { return a.Name == attribute.Name; })) {
+                                    state.setError(2007);
+                                }
+                            }
+                            catch (e) {
+                            }
+                        }
                         state.context.unshift(attribute);
                         state.tokenizers.unshift(tokenizeAttribute());
                         return "attribute em" + state.ec;
@@ -1722,7 +1752,7 @@ var tidl={};
                     if (state.lastToken != ',') {
                         state.setError(2003);
                     }
-                    if (attribute.Name == "tidl" && state.ec === '') {
+                    if (contains(['tidl', 'description'], attribute.Name) && state.ec === '') {
                         state.setWarn(1002);
                     }
                     attribute.Values.push('');
