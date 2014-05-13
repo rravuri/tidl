@@ -370,6 +370,16 @@
                             'revision', 'exception', 'return', 'value', 'seealso'], attribute.Name) === false) {
                             state.setWarn(1007);
                         }
+                        if (contains(['description', 'since','method','urlTemplate','bodyParam',
+                            'return', 'seealso'], attribute.Name)) {
+                            try {
+                                if (contains(obj.Attributes, function (a) { return a.Name == attribute.Name; })) {
+                                    state.setError(2007);
+                                }
+                            }
+                            catch (e) {
+                            }
+                        }
                         state.context.unshift(attribute);
                         state.tokenizers.unshift(tokenizeAttribute());
                         return "attribute em" + state.ec;
@@ -519,6 +529,16 @@
                             'revision', 'author', 'reviewer', 'organisation',
                             'namespacePrefix', 'organisationDomainName'], attribute.Name) === false) {
                             state.setWarn(1003);
+                        }
+                        if (contains(['description', 'version','organisation',
+                            'namespacePrefix','organisationDomainName'], attribute.Name)) {
+                            try {
+                                if (contains(intf.Attributes, function (a) { return a.Name == attribute.Name; })) {
+                                    state.setError(2007);
+                                }
+                            }
+                            catch (e) {
+                            }
                         }
                         state.context.unshift(attribute);
                         state.tokenizers.unshift(tokenizeAttribute());
@@ -731,6 +751,16 @@
                             'namespacePrefix', 'organisationDomainName'], attribute.Name) === false) {
                             state.setWarn(1006);
                         }
+                        if (contains(['description', 'organisation','organisationDomainName',
+                            'namespacePrefix'], attribute.Name)) {
+                            try {
+                                if (contains(model.Attributes, function (a) { return a.Name == attribute.Name; })) {
+                                    state.setError(2007);
+                                }
+                            }
+                            catch (e) {
+                            }
+                        }
                         state.context.unshift(attribute);
                         state.tokenizers.unshift(tokenizeAttribute());
                         return "attribute em" + state.ec;
@@ -917,7 +947,7 @@
                     if (state.lastToken != ',') {
                         state.setError(2003);
                     }
-                    if (attribute.Name == "tidl" && state.ec === '') {
+                    if (contains(['tidl', 'description'], attribute.Name) && state.ec === '') {
                         state.setWarn(1002);
                     }
                     attribute.Values.push('');

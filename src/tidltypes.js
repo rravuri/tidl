@@ -671,7 +671,7 @@
         '2004': "Unexpected character: Expecting an ID as the first value for the attributes 'parameter', 'exception' or 'value'.",
         '2005': "Unexpected character: Expecting an n.n.n version as the first value for the attributes 'tidl', 'version', 'since' or 'revision'.",
         '2006': "Unexpected character: Expecting a string as the first value for the attribute.",
-        '2007': "",
+        '2007': "Duplicate: there can only be one instance per scope.",
         '2008': "",
         '2009': "",
         '2010': "Unexpected character: Expected a valid interface name.",
