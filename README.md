@@ -11,7 +11,7 @@ Current Status
 Usage
 -----
 
-### Using node
+### Installing the parser
 tidl parser can be installed and managed via [npm](https://npmjs.org/), the [Node.js](http://nodejs.org/) package manager.
 
 tidl parser requires stable [Node.js](http://nodejs.org/) versions `>= 0.10.0`. Odd version numbers of [Node.js](http://nodejs.org/) are considered unstable development versions.
@@ -19,10 +19,10 @@ tidl parser requires stable [Node.js](http://nodejs.org/) versions `>= 0.10.0`. 
 
 in windows ...
 ```dos
-> mkdir tidl
-> cd tidl
-> npm install https://github.com/rravuri/tidl/tarball/master
-> .\node_modules\.bin\tidl.cmd
+> npm install https://github.com/rravuri/tidl/tarball/master -g
+...
+...
+> tidl.cmd
 
   Usage: cli.js [options] [command]
 
@@ -47,27 +47,24 @@ Options:
 parse a tidl file to output the AST in json
 
 ```
-> .\node_modules\.bin\tidl.cmd parse filename.idl
+> tidl.cmd parse filename.idl
 
 ```
 
 
-in linux ...
+in linux ommit the `.cmd` from in the command line...
 
 ```dos
-$ mkdir tidl
-$ cd tidl
-$ npm install https://github.com/rravuri/tidl/tarball/master
-$ .\node_modules\.bin\tidl
-  ...
-  ...
-$
-```
-parse a tidl file to output the AST in json
+$ npm install https://github.com/rravuri/tidl/tarball/master -g
+$ tidl parse filename.idl
 
 ```
-$ .\node_modules\.bin\tidl parse filename.idl
 
+### Uninstalling the parser
+tidl parser can be uninstalled and managed via [npm](https://npmjs.org/), the [Node.js](http://nodejs.org/) package manager.
+```dos
+> npm uninstall tidl -g
+unbuild tidl@x.y.z
 ```
 
 Getting the source
