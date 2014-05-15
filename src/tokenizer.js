@@ -1,528 +1,3 @@
-(function () {
-    "uses strict;";
-    function endsWith(s, v) {
-        if (s === undefined || v === undefined) return false;
-        if (s === null || v === null) return false;
-        if (s.length < v.length) return false;
-        if (s.substr(s.length - v.length, v.length) === v) return true;
-        return false;
-    }
-
-    function IdlAttr() {
-        this.Name = '';
-        this.Type = 'String';
-        this.Values = [];
-        return this;
-    }
-
-    IdlAttr.prototype.clone = function _cloneAttribute() {
-        var newattr = new IdlAttr();
-        newattr.Name = this.Name;
-        newattr.Type = this.Type;
-        newattr.Values = this.Values.concat([]);
-        return newattr;
-    };
-
-    function IdlType() {
-        this.Name = '';
-        this.Types = [];
-        return this;
-    }
-
-    IdlType.prototype.clone = function _cloneType() {
-        var newtype = new IdlType();
-        newtype.Name = this.Name;
-        for (var i = 0; i < this.Types.length; ++i) {
-            var typ = this.Types[i];
-            newtype.Types.push(typ.clone());
-        }
-        return newtype;
-    };
-
-    function IdlParam() {
-        this.Name = '';
-        this.Type = new IdlType();
-        this.Modifiers = [];
-        this.Mandatory = false;
-        return this;
-    }
-
-    IdlParam.prototype.clone = function _cloneParam() {
-        var newparam = new IdlParam();
-        newparam.Name = this.Name;
-        newparam.Type = this.Type.clone();
-        newparam.Modifiers = this.Modifiers.concat([]);
-        newparam.Mandatory = this.Mandatory;
-        return newparam;
-    };
-
-    function IdlOps() {
-        this.Name = '';
-        this.Return = new IdlType();
-        this.Parameters = {};
-        this.Attributes = [];
-        this.Exceptions = [];
-        this.BaseTypes = [];
-        this.IsAsync = false;
-        this.type = '';
-        return this;
-    }
-
-    IdlOps.prototype.getAttribute = function _getAttribute(name) {
-        for (i = 0; i < this.Attributes.length; ++i) {
-            var attr = this.Attributes[i];
-            if (attr.Name == name) {
-                return attr;
-            }
-        }
-        return null;
-    };
-
-    IdlOps.prototype.getDescription = function _getDescription() {
-        var attr = this.getAttribute('description');
-        if (attr) {
-            return attr.Values[0];
-        }
-        return null;
-    };
-
-    IdlOps.prototype.clone = function _cloneOps() {
-        var i;
-        var newops = new IdlOps();
-        newops.Name = this.Name;
-        newops.Return = this.Return.clone();
-        for (var pn in this.Parameters) {
-            var prm = this.Parameters[pn];
-            newops.Parameters[prm.Name] = prm.clone();
-        }
-        for (i = 0; i < this.Attributes.length; ++i) {
-            var attr = this.Attributes[i];
-            newops.Attributes.push(attr.clone());
-        }
-        newops.Exceptions = this.Exceptions.concat([]);
-        newops.BaseTypes = this.BaseTypes.concat([]);
-        newops.IsAsync = this.IsAsync;
-        newops.type = this.type;
-        return newops;
-    };
-
-    function IdlIntf() {
-        this.Name = '';
-        this.Service = '';
-        this.Attributes = [];
-        this.Operations = [];
-        this.Types = [];
-        this.Enumerations = [];
-        this.Exceptions = [];
-        this.Events = [];
-        return this;
-    }
-
-    IdlIntf.prototype.clone = function _cloneInterface() {
-        var i;
-        var newintf = new IdlIntf();
-        newintf.Name = this.Name;
-        newintf.Service = this.Service;
-        for (i = 0; i < this.Attributes.length; ++i) {
-            var attr = this.Attributes[i];
-            newintf.Attributes.push(attr.clone());
-        }
-        for (i = 0; i < this.Operations.length; ++i) {
-            var op = this.Operations[i];
-            newintf.Operations.push(op.clone());
-        }
-        for (i = 0; i < this.Types.length; ++i) {
-            var typ = this.Types[i];
-            newintf.Types.push(typ.clone());
-        }
-        for (i = 0; i < this.Enumerations.length; ++i) {
-            var enm = this.Enumerations[i];
-            newintf.Enumerations.push(enm.clone());
-        }
-        for (i = 0; i < this.Exceptions.length; ++i) {
-            var ex = this.Exceptions[i];
-            newintf.Exceptions.push(ex.clone());
-        }
-        for (i = 0; i < this.Events.length; ++i) {
-            var evt = this.Events[i];
-            newintf.Events.push(evt.clone());
-        }
-        return newintf;
-    };
-
-    function IdlModel() {
-        this.Service = '';
-        this.Attributes = [];
-        this.Types = [];
-        this.Enumerations = [];
-        this.Exceptions = [];
-        this.Events = [];
-        this.Interfaces = {};
-        return this;
-    }
-
-    IdlModel.prototype.clone = function _cloneModel() {
-        var i;
-        var newmodel = new IdlModel();
-        newmodel.Service = this.Service;
-
-        for (i = 0; i < this.Attributes.length; ++i) {
-            var newattr = this.Attributes[i].clone();
-            newmodel.Attributes.push(newattr);
-        }
-        for (i = 0; i < this.Types.length; ++i) {
-            var typ = this.Types[i];
-            newmodel.Types.push(typ.clone());
-        }
-        for (i = 0; i < this.Enumerations.length; ++i) {
-            var enm = this.Enumerations[i];
-            newmodel.Enumerations.push(enm.clone());
-        }
-        for (i = 0; i < this.Exceptions.length; ++i) {
-            var ex = this.Exceptions[i];
-            newmodel.Exceptions.push(ex.clone());
-        }
-        for (i = 0; i < this.Events.length; ++i) {
-            var evt = this.Events[i];
-            newmodel.Events.push(evt.clone());
-        }
-        for (var inf in this.Interfaces) {
-            var newintf = this.Interfaces[inf].clone();
-            newmodel.Interfaces[inf] = newintf;
-        }
-        return newmodel;
-    };
-
-    var HttpVerbsMapping = [
-        ["calculate", "GET", "", ""],
-        ["getFrom", "GET", "", ""],
-        ["getby", "GET", "", ""],
-        ["get", "GET", "", ""],
-        ["searchby", "GET", "", "search"],
-        ["search", "GET", "search", ""],
-        ["retrieve", "POST", "", "retrieve"],
-        ["deleteFrom", "DELETE", "", ""],
-        ["delete", "DELETE", "", ""],
-        ["update", "PUT", "", ""],
-        ["revoke", "PUT", "", "revoke"],
-        ["rename", "PUT", "", "rename"],
-        ["extend", "PUT", "", "extend"],
-        ["unlockAccountBy", "PUT", "unlockaccount", ""],
-        ["validate", "GET", "validate", ""],
-        ["createOrUpdate", "POST", "", ""],
-        ["create", "POST", "", ""],
-        ["open", "POST", "", ""],
-        ["issue", "POST", "issue", ""],
-        ["reserve", "POST", "", "reserve"],
-        ["confirm", "POST", "", "confirm"],
-        ["unreserve", "POST", "", "unreserve"],
-        ["redeem", "POST", "", "redeem"],
-        ["restore", "POST", "", "restore"],
-        ["activate", "POST", "", "activate"],
-        ["deactivate", "POST", "", "deactivate"],
-        ["approve", "POST", "", "approve"],
-        ["reject", "POST", "", "reject"],
-        ["add", "POST", "", ""],
-        ["propose", "POST", "", ""],
-        ["adjust", "POST", "adjust", ""],
-        ["move", "POST", "move", ""],
-        ["reject", "DELETE", "", ""],
-        ["remove", "DELETE", "", ""],
-        ["cancel", "DELETE", "", ""],
-        ["close", "DELETE", "", ""]
-    ];
-    function formatRoute(route) {
-        //Clean the route structure before returning it
-        route = route.replace("//", "/");
-        route = route[0] == "/" ? route.substr(1) : route;
-        return endsWith(route, "/") ? route.substr(0, route.length - 1) : route;
-    }
-
-    var AnnotationAttribute_UrlRouteTemplate = "urlTemplate";
-    var AnnotationAttribute_HttpMethod = "method";
-    var AnnotationAttribute_BodyParameterName = "bodyParam";
-    var AnnotationAttribute_HttpStatus = "statusCode";
-    var FromBody_Suffix = "FromBody";
-
-    function readOperationAttributeFromAnnontationFile(op, intfAnno, attributeName) {
-        var value = '';
-        if (intfAnno===null || intfAnno===undefined) return value;
-
-        if (intfAnno.Operations !== null && intfAnno.Operations.length > 0) {
-            var aop = null;
-            for (var opi in intfAnno.Operations) {
-                aop = intfAnno.Operations[opi];
-                if (aop.Name == op.Name) {
-                    break;
-                }
-                aop = null;
-            }
-            if (aop === null) {
-                return value;
-            }
-            //Check if the current operation has an custom attribute value specified in the annontated file
-            var urlAttrib = aop.getAttribute(AnnotationAttribute_UrlRouteTemplate);
-
-            if ((attributeName == AnnotationAttribute_UrlRouteTemplate) && urlAttrib !== null) {
-                return urlAttrib.Values[0];
-            }
-
-            var methodAttrib = aop.getAttribute(AnnotationAttribute_HttpMethod);
-            if ((attributeName == AnnotationAttribute_HttpMethod) && methodAttrib !== null) {
-                return methodAttrib.Values[0];
-            }
-
-            var bodyAttrib = aop.getAttribute(AnnotationAttribute_BodyParameterName);
-            if ((attributeName == AnnotationAttribute_BodyParameterName) && bodyAttrib !== null) {
-                return bodyAttrib.Values[0];
-            }
-        }
-
-        return value;
-    }
-    function getPostMethods(op, intfAnno) {
-        //Check if method override exists in annotation file
-        var method = readOperationAttributeFromAnnontationFile(op, intfAnno, AnnotationAttribute_HttpMethod);
-        var bodyParam = readOperationAttributeFromAnnontationFile(op, intfAnno, AnnotationAttribute_BodyParameterName);
-
-        var i = 0;
-        var h = null;
-        if (method === null || method === '') {
-            for (i = 0; i < HttpVerbsMapping.length; ++i) {
-                var o = HttpVerbsMapping[i];
-                if (op.Name.toLowerCase().indexOf(o[0].toLowerCase()) === 0) {
-                    h = o;
-                    break;
-                }
-            }
-            method = (h !== null) ? h[1] : "GET";
-        }
-
-        if (method == "GET" || method == "DELETE") {
-            if (bodyParam && bodyParam !== '') {
-                method = 'POST';
-            }
-            for (var p in op.Parameters) {
-                if (endsWith(p, "FromBody")) {
-                    method = "POST";
-                }
-            }
-        }
-        return method;
-    }
-
-    function getParam(p) {
-        return (endsWith(p.Name, "FromBody") ? p.Name.substr(0, p.Name.length - 8) : p.Name);
-    }
-
-    function excludeParameterFromQuerystring(p, route, bodyParam) {
-        //Parameters passed via HTTP method body are excluded from querystring
-        if ((bodyParam === null || bodyParam === undefined || bodyParam === '') && endsWith(p.Name, FromBody_Suffix)) return true;
-        if (!(bodyParam === null || bodyParam === undefined || bodyParam === '') && p.Name == bodyParam) return true;
-
-        if ((route === null || route === undefined || route === '')) {
-            //Mandatory parameters except of type set or list, are excluded from querystring (since they are part of route)
-            if (p.Mandatory && 
-                !((p.Type.Name.indexOf("set") === 0) || (p.Type.Name.indexOf("list") === 0)
-                    )
-                ) {
-                return true;
-            }
-        }
-        else {
-                //If the route is provided via annonation file, then route parameters are excluded from querystring
-                if (route.indexOf('{' + p.Name + '}') > 0) {
-                    return true;
-                }
-        }
-
-        return false;
-    }
-
-    function getBodyParam(op, intfAnno) {
-        var route = readOperationAttributeFromAnnontationFile(op, intfAnno, AnnotationAttribute_UrlRouteTemplate);
-        var bodyParam = readOperationAttributeFromAnnontationFile(op, intfAnno, AnnotationAttribute_BodyParameterName);
-
-        if (!(bodyParam === null || bodyParam === undefined || bodyParam === '')) return bodyParam;
-
-        for (var pn in op.Parameters) {
-            var p = op.Parameters[pn];
-            if ((bodyParam === null || bodyParam === undefined || bodyParam === '') && endsWith(p.Name, FromBody_Suffix)) return pn;
-        }
-        return '';
-    }
-
-    function getQueryString(op, intfAnno) {
-        //Check if method override exists in annotation file
-        var route = readOperationAttributeFromAnnontationFile(op, intfAnno, AnnotationAttribute_UrlRouteTemplate);
-        var bodyParam = readOperationAttributeFromAnnontationFile(op, intfAnno, AnnotationAttribute_BodyParameterName);
-
-        var isf = true;
-        var sb = '';
-        for (var pn in op.Parameters) {
-            var p = op.Parameters[pn];
-            if (excludeParameterFromQuerystring(p, route, bodyParam)) continue;
-            if (isf) { sb += "?"; isf = false; } else { sb += "&"; }
-            sb += (getParam(p) + "={" + getParam(p) + "...}");
-        }
-        return sb;
-    }
-
-
-    function getHttpRoute(op, intf, intfAnno) {
-        var route = readOperationAttributeFromAnnontationFile(op, intfAnno, AnnotationAttribute_UrlRouteTemplate);
-        if (route && route !== '') {
-            return formatRoute(route);
-        }
-
-        var i = 0;
-        var h = null;
-        for (i = 0; i < HttpVerbsMapping.length; ++i) {
-            var o = HttpVerbsMapping[i];
-            if (op.Name.toLowerCase().indexOf(o[0].toLowerCase()) === 0) {
-                h = o;
-                break;
-            }
-        }
-        route = (h !== null) ? h[2] : "";
-        var opn = op.Name;
-        if (endsWith(op.Name, "Feed")) { route += "feed"; opn = opn.substr(0, opn.length - 4); }
-        if (endsWith(op.Name.toLowerCase(), intf.Name.toLowerCase())) { opn = opn.substr(0, opn.length - intf.Name.length); }
-        var roppart = "";
-
-        if (h !== null && (h[0].length != opn.length)) {
-            roppart = "/" + opn.substr(h[0].length).toLowerCase();
-        }
-
-        var qp = "";
-        var isf = true;
-        var s='';
-        for (var pn in op.Parameters) {
-            var p = op.Parameters[pn];
-            if (p.Mandatory && !endsWith(p.Name, "FromBody") && (p.Type.Name != "set") && (p.Type.Name != "list")) {
-                if (endsWith(roppart.toLowerCase(), "by" + p.Name.toLowerCase()) || endsWith(roppart.toLowerCase(), "to" + p.Name.toLowerCase())) {
-                    s = "/{" + p.Name.toLowerCase() + "}" + roppart.substr(0, roppart.length - (p.Name.length + 2));
-                    roppart = s;
-                }
-                else if (endsWith(roppart.toLowerCase(), "from" + p.Name.toLowerCase())) {
-                    s = "/{" + p.Name.toLowerCase() + "}" + roppart.substr(0, roppart.length - (p.Name.length + 4));
-                    roppart = s;
-                }
-                else if (endsWith(roppart.toLowerCase(), p.Name.toLowerCase())) {
-                    roppart = "/{" + p.Name.toLowerCase() + "}";
-                }
-                else {
-                    qp += "/{" + p.Name.toLowerCase() + "}";
-                }
-            }
-        }
-        route += roppart;
-        if (h !== null && !(h[3] === null || h[3] === '')) {
-            route += "/" + h[3];
-        }
-        else if (h !== null && (h[3] === null || h[3] === '') && h[1].toLowerCase() != getPostMethods(op, intfAnno).toLowerCase()) {
-            route += "/" + h[0];
-        }
-        else if (h === null && endsWith(opn.toLowerCase(), intf.Name.toLowerCase())) {
-            route += "/" + opn.toLowerCase().substr(0, opn.length - intf.Name.length);
-        }
-
-        route += qp;
-        return formatRoute(route);
-    }
-
-    IdlIntf.prototype.Version = function () {
-        var v = { Major: 0, Minor: 0, Build: 0 };
-
-        for (i = 0; i < this.Attributes.length; ++i) {
-            if (this.Attributes[i].Name == 'version') {
-                var d = this.Attributes[i].Values[0].split('.');
-                v.Major = d[0];
-                v.Minor = d[1];
-                v.Build = d[2];
-                break;
-            }
-        }
-        return v;
-    };
-
-    IdlModel.prototype.updateEndpoints = function (annoModel) {
-        var idlModel = this;
-        var i;
-        var intfAnno;
-        for (var infn in idlModel.Interfaces) {
-            var intf = idlModel.Interfaces[infn];
-            if (annoModel){
-                try{
-                    intfAnno=annoModel.Interfaces[infn];
-                }
-                catch(e){
-
-                }
-            }
-            for (var opi in intf.Operations) {
-                var op = intf.Operations[opi];
-                var restendpoint = null;
-                for (i = 0; i < op.Attributes.length; ++i) {
-                    if (op.Attributes[i].Name == 'restendpoint') {
-                        restendpoint = op.Attributes[i];
-                        break;
-                    }
-                }
-                if (restendpoint === null) {
-                    restendpoint = new IdlAttr();
-                    restendpoint.Name = "restendpoint";
-                    //,Type = IdlAttr.IdlAttrType.String
-
-                    op.Attributes.push(restendpoint);
-                }
-                else {
-                    restendpoint.Values = [];
-                }
-                restendpoint.Values.push(getPostMethods(op, intfAnno));
-                restendpoint.Values.push("v" + intf.Version().Major + "/" + intf.Name.toLowerCase() + "/" + getHttpRoute(op, intf, intfAnno));
-                restendpoint.Values.push(getQueryString(op, intfAnno));
-                restendpoint.Values.push(getBodyParam(op, intfAnno));
-
-            }
-        }
-    };
-
-   var tidl = {
-        IdlModel: IdlModel,
-        IdlAttr: IdlAttr,
-        IdlIntf: IdlIntf,
-        IdlOps: IdlOps,
-        IdlType: IdlType,
-        IdlParam: IdlParam,
-
-        Messages: {
-            '1000': 'Unknown error', 
-            '1001': "Unsupported attribute: Expecting 'tidl' attribute.", 
-            '1002': "Unused value: Will be ignored.", 
-            '1003': "Unsupported attribute: Expecting one of 'description', 'owner', 'version', 'revision', 'author', 'reviewer', 'organisation', 'namespacePrefix', 'organisationDomainName'.", 
-            '1004': "Duplicate: Will be ignored.", 
-            '1005': "Unsupported in tidl 1.x.x files, please change the tidl version to 2.0.0;", 
-            '1006': "Unsupported attribute: Expecting one of 'description', 'owner', 'organisation', 'namespacePrefix', 'organisationDomainName'.", 
-            '1007': "Unsupported attribute: Expecting one of 'description', 'parameter', 'since','revision', 'exception', 'return','value','seealso'.", 
-
-            '2001': "Unexpected character: Expecting an attribute type like description, parameter etc,.", 
-            '2002': "Unexpected character: Expecting an attribute or a interface definition.", 
-            '2003': "Unexpected character: Bad syntax.", 
-            '2004': "Unexpected character: Expecting an ID as the first value for the attributes 'parameter', 'exception' or 'value'.", 
-            '2005': "Unexpected character: Expecting an n.n.n version as the first value for the attributes 'tidl', 'version', 'since' or 'revision'.", 
-            '2006': "Unexpected character: Expecting a string as the first value for the attribute.", 
-            '2007': "", 
-            '2008': "", 
-            '2009': "", 
-            '2010': "Unexpected character: Expected a valid interface name.", 
-            '2011': "Unexpected character: Expected 'exposes' keyword.", 
-            '2012': "Mismatched Service. The Service Name in Service decleration and interface do not match.", 
-
-            '3001': "Standards: Suggested to start with a capital letter."
-        }
-    };
-
     function _createTokenizer(config, parserConfig) {
         var ID = /^[a-zA-Z][a-zA-Z0-9_]*/;
         var builtintypes = ["boolean", "byte", "short", "int", "long", "float", "double", "decimal", "string", "datetime", "list", "set", "map"];
@@ -542,7 +17,7 @@
         function tokenString(quote, col) {
             return function _tokenString(stream, state) {
                 var data = "", next, end = false, escaped = false;
-                while ((next = stream.next())||false) {
+                while ((next = stream.next()) || false) {
                     if (next === quote && !escaped) {
                         end = true;
                         break;
@@ -558,7 +33,7 @@
                 var attribute = state.context[0];
                 if (attribute) {
                     try {
-                        attribute.Values[attribute.Values.length - 1] = attribute.Values[attribute.Values.length - 1] + data.replace(/\\/g,'') + (end ? '' : '\n');
+                        attribute.Values[attribute.Values.length - 1] = attribute.Values[attribute.Values.length - 1] + data.replace(/\\/g, '') + (end ? '' : '\n');
                     }
                     catch (ex) {
                     }
@@ -605,7 +80,7 @@
                 var array = state.context[0];
 
                 if (state.lastToken === '' || state.lastToken == ',') {
-                    if ((matches = stream.match(ID))!==null) {
+                    if ((matches = stream.match(ID)) !== null) {
                         state.lastToken = 'i';
                         array.push(matches[0]);
                         if (contains(builtintypes, matches[0])) {
@@ -653,7 +128,7 @@
                 var parent = state.context[1];
 
                 if (type.Name === '') {
-                    if ((matches = stream.match(ID))!==null) {
+                    if ((matches = stream.match(ID)) !== null) {
                         type.Name = matches[0];
                         state.lastToken = 't';
                         if (contains(builtintypes, matches[0])) {
@@ -702,7 +177,7 @@
                 var t;
 
                 if (state.lastToken == '<' || state.lastToken == ',') {
-                    if ((matches = stream.match(ID, false))!==null) {
+                    if ((matches = stream.match(ID, false)) !== null) {
                         state.context.unshift(new tidl.IdlType());
                         state.tokenizers.unshift(tokenizeType());
                         return tokenize(stream, state);
@@ -730,7 +205,7 @@
                     state.tokenizers.unshift(tokenizeTypeList());
                     return "operator";
                 }
-                else if ((matches = stream.match(ID))!==null) {
+                else if ((matches = stream.match(ID)) !== null) {
                     t = { name: matches[0], type: 'dataType', parameters: [] };
                     obj.parameters.push(t);
                     if (contains(builtintypes, matches[0])) {
@@ -773,7 +248,7 @@
                 var obj = state.context[1];
 
 
-                if ((matches = stream.match(ID, false))!==null) {
+                if ((matches = stream.match(ID, false)) !== null) {
                     if (matches[0] == 'mandatory' && obj.type != 'enumeration' && param.Mandatory === false) {
                         stream.match(ID);
                         param.Modifiers.push(matches[0]);
@@ -834,7 +309,7 @@
                 var parentScope = state.context[1];
                 var param;
                 if (state.lastToken == '(') {
-                    if ((matches = stream.match(ID, false))!==null) {
+                    if ((matches = stream.match(ID, false)) !== null) {
                         param = new tidl.IdlParam();
                         state.context.unshift(param);
                         state.tokenizers.unshift(tokenizeParam());
@@ -889,11 +364,21 @@
                 if (stream.peek() == '@') {
                     stream.next();
                     var attribute = new tidl.IdlAttr();
-                    if ((matches = stream.match(ID, true))!==null) {
+                    if ((matches = stream.match(ID, true)) !== null) {
                         attribute.Name = matches[0];
-                        if (contains(['description', 'parameter', 'since',
+                        if (contains(['description', 'parameter', 'since','method','urlTemplate','bodyParam',
                             'revision', 'exception', 'return', 'value', 'seealso'], attribute.Name) === false) {
                             state.setWarn(1007);
+                        }
+                        if (contains(['description', 'since','method','urlTemplate','bodyParam',
+                            'return', 'seealso'], attribute.Name)) {
+                            try {
+                                if (contains(obj.Attributes, function (a) { return a.Name == attribute.Name; })) {
+                                    state.setError(2007);
+                                }
+                            }
+                            catch (e) {
+                            }
                         }
                         state.context.unshift(attribute);
                         state.tokenizers.unshift(tokenizeAttribute());
@@ -937,7 +422,7 @@
                 var matches;
 
                 if (obj.Name === '') {
-                    if ((matches = stream.match(ID))!==null) {
+                    if ((matches = stream.match(ID)) !== null) {
                         state.lastToken = 'i';
                         obj.Name = matches[0];
                         if (obj.type == 'operation') {
@@ -955,7 +440,7 @@
                     return null;
                 }
                 else if (state.lastToken == ')') {
-                    if ((matches = stream.match(ID, false))!==null) {
+                    if ((matches = stream.match(ID, false)) !== null) {
                         if (matches == 'throws') {
                             if (obj.type == 'operation') {
                                 state.lastToken = '';
@@ -1038,12 +523,22 @@
                 if (stream.peek() == '@') {
                     stream.next();
                     var attribute = new tidl.IdlAttr();
-                    if ((matches = stream.match(ID, true))!==null) {
+                    if ((matches = stream.match(ID, true)) !== null) {
                         attribute.Name = matches[0];
                         if (contains(['description', 'owner', 'version',
                             'revision', 'author', 'reviewer', 'organisation',
                             'namespacePrefix', 'organisationDomainName'], attribute.Name) === false) {
                             state.setWarn(1003);
+                        }
+                        if (contains(['description', 'version','organisation',
+                            'namespacePrefix','organisationDomainName'], attribute.Name)) {
+                            try {
+                                if (contains(intf.Attributes, function (a) { return a.Name == attribute.Name; })) {
+                                    state.setError(2007);
+                                }
+                            }
+                            catch (e) {
+                            }
                         }
                         state.context.unshift(attribute);
                         state.tokenizers.unshift(tokenizeAttribute());
@@ -1056,7 +551,7 @@
                     }
                 }
 
-                if ((matches = stream.match(ID, false))!==null) {
+                if ((matches = stream.match(ID, false)) !== null) {
                     if (contains(['type', 'event', 'exception', 'enumeration'], matches[0])) {
                         stream.match(ID);
                         ob = new tidl.IdlOps();
@@ -1129,23 +624,23 @@
                 var matches;
 
                 if (intf.Service === '') {
-                    if ((matches = stream.match(ID))!==null) {
+                    if ((matches = stream.match(ID)) !== null) {
                         if (intf.Name !== '') {
                             if (state.lastToken == 'k') {
                                 intf.Service = matches[0];
                                 state.ec = '';
-                                if (sname!==''){
-                                    if (intf.Service.toLowerCase()!=sname.toLowerCase()){
+                                if (sname !== '') {
+                                    if (intf.Service.toLowerCase() != sname.toLowerCase()) {
                                         state.setError(2012);
-                                        return 'error '+state.ec;
+                                        return 'error ' + state.ec;
                                     }
                                 }
                                 else if (intf.Service.toUpperCase()[0] != intf.Service[0]) {
-                                    parentScope.Service=intf.Service;
+                                    parentScope.Service = intf.Service;
                                     return "def info-mark m-3001";
                                 }
                                 else {
-                                    parentScope.Service=intf.Service;
+                                    parentScope.Service = intf.Service;
                                 }
                                 return 'def';
                             }
@@ -1169,14 +664,33 @@
                         }
                     }
                     else {
-                        if (sname!=='' && intf.Name!=='' && stream.peek() == '{'){
-                            intf.Service = sname;
-                            stream.next();
-                            state.tokenizers.shift();
-                            state.tokenizers.unshift(tokenizeInterfaceBody());
-                            return 'bracket';
+                        if (intf.Name !== '') {
+                            if (stream.peek() == '{') {
+                                if (sname !== '') {
+                                    intf.Service = sname;
+                                    stream.next();
+                                    state.tokenizers.shift();
+                                    state.tokenizers.unshift(tokenizeInterfaceBody());
+                                    return 'bracket';
+                                }
+                                else if (state.lastToken == 'k') {
+                                    state.setError(2013);
+                                }
+                                else
+                                {
+                                    state.setError(2011);
+                                }
+                            }
+                            else if (state.lastToken == 'k') {
+                                state.setError(2013);
+                            }
+                            else {
+                                state.setError(2010);
+                            }
                         }
-                        state.setError(2010);
+                        else {
+                            state.setError(2010);
+                        }
                     }
                 }
 
@@ -1231,11 +745,21 @@
                 if (stream.peek() == '@') {
                     stream.next();
                     var attribute = new tidl.IdlAttr();
-                    if ((matches = stream.match(ID, true))!==null) {
+                    if ((matches = stream.match(ID, true)) !== null) {
                         attribute.Name = matches[0];
                         if (contains(['description', 'owner', 'organisation',
                             'namespacePrefix', 'organisationDomainName'], attribute.Name) === false) {
                             state.setWarn(1006);
+                        }
+                        if (contains(['description', 'organisation','organisationDomainName',
+                            'namespacePrefix'], attribute.Name)) {
+                            try {
+                                if (contains(model.Attributes, function (a) { return a.Name == attribute.Name; })) {
+                                    state.setError(2007);
+                                }
+                            }
+                            catch (e) {
+                            }
                         }
                         state.context.unshift(attribute);
                         state.tokenizers.unshift(tokenizeAttribute());
@@ -1247,7 +771,7 @@
                         return 'error error-mark m-2003';
                     }
                 }
-                if ((matches = stream.match(/^interface\s/))!==null) {
+                if ((matches = stream.match(/^interface\s/)) !== null) {
                     var intf = new tidl.IdlIntf();
                     state.ec = '';
                     state.context.unshift(intf);
@@ -1255,7 +779,7 @@
                     return "keyword";
                 }
 
-                if ((matches = stream.match(ID, false))!==null) {
+                if ((matches = stream.match(ID, false)) !== null) {
                     if (contains(['type', 'event', 'exception', 'enumeration'], matches[0])) {
                         stream.match(ID);
                         var ob = new tidl.IdlOps();
@@ -1300,7 +824,7 @@
                 var matches;
 
                 if (model.Service === '') {
-                    if ((matches = stream.match(ID))!==null) {
+                    if ((matches = stream.match(ID)) !== null) {
                         model.Service = matches[0];
                         state.ec = '';
                         if (model.Service.toUpperCase()[0] != model.Service[0]) {
@@ -1375,9 +899,9 @@
                 var matches;
                 if (attribute.Values.length === 0) {
                     if (contains(['parameter', 'exception', 'value'], attribute.Name)) {
-                        if ((matches = stream.match(ID))!==null) {
+                        if ((matches = stream.match(ID)) !== null) {
                             attribute.Values.push(matches[0]);
-                            attribute.Type='Parameter';
+                            attribute.Type = 'Parameter';
                             state.lastToken = 'v';
                             return "variable " + state.ec;
                         }
@@ -1386,9 +910,9 @@
                         }
                     }
                     else if (contains(['tidl', 'version', 'since', 'revision'], attribute.Name)) {
-                        if ((matches = stream.match(/\d+\.\d+.\d+(\-[0-9a-zA-Z]+(\.[0-9a-zA-Z]+)*)?(\+[0-9a-zA-Z]+(\.[0-9a-zA-Z]+)*)?/, true))!==null) {
+                        if ((matches = stream.match(/\d+\.\d+.\d+(\-[0-9a-zA-Z]+(\.[0-9a-zA-Z]+)*)?(\+[0-9a-zA-Z]+(\.[0-9a-zA-Z]+)*)?/, true)) !== null) {
                             attribute.Values.push(matches[0]);
-                            attribute.Type='Version';
+                            attribute.Type = 'Version';
                             state.lastToken = 'v';
                             return "number " + state.ec;
                         }
@@ -1423,7 +947,7 @@
                     if (state.lastToken != ',') {
                         state.setError(2003);
                     }
-                    if (attribute.Name == "tidl" && state.ec === '') {
+                    if (contains(['tidl', 'description'], attribute.Name) && state.ec === '') {
                         state.setWarn(1002);
                     }
                     attribute.Values.push('');
@@ -1460,7 +984,7 @@
             if (stream.eat('@')) {
                 var attribute = new tidl.IdlAttr();
                 state.ec = '';
-                if ((matches = stream.match(ID, true))!==null) {
+                if ((matches = stream.match(ID, true)) !== null) {
                     attribute.Name = matches[0];
                     if (contains(['tidl'], attribute.Name) === false) {
                         state.setWarn(1001);
@@ -1483,7 +1007,7 @@
                     return 'error error-mark m-2001';
                 }
             }
-            if ((matches = stream.match(/^service\s/))!==null) {
+            if ((matches = stream.match(/^service\s/)) !== null) {
                 var tidlAttr = contains(model.Attributes, function (a) { return a.Name == 'tidl'; });
                 if (tidlAttr === false || tidlAttr.Values[0].charAt(0) != '2') {
                     stream.skipToEnd();
@@ -1494,7 +1018,7 @@
                 state.tokenizers.unshift(tokenizeService());
                 return "keyword";
             }
-            if ((matches = stream.match(/^interface\s/))!==null) {
+            if ((matches = stream.match(/^interface\s/)) !== null) {
                 var intf = new tidl.IdlIntf();
                 state.ec = '';
                 state.context.unshift(intf);
@@ -1578,188 +1102,76 @@
         };
     }
 
-    var sutil={};
-
-    // from CodeMirror
-    // Counts the column offset in a string, taking tabs into account.
-    // Used mostly to find indentation.
-    function countColumn(string, end, tabSize, startIndex, startValue) {
-        if (end === null) {
-            end = string.search(/[^\s\u00a0]/);
-            if (end == -1) end = string.length;
-        }
-        for (var i = startIndex || 0, n = startValue || 0; i < end; ++i) {
-            if (string.charAt(i) == "\t") n += tabSize - (n % tabSize);
-            else ++n;
-        }
-        return n;
-    }
-
-    // STRING STREAM
-
-    // Fed to the mode parsers, provides helper functions to make
-    // parsers more succinct.
-
-    // The character stream used by a mode's parser.
-    sutil.StringStream = function StringStream(string, tabSize) {
-        this.pos = this.start = 0;
-        this.string = string;
-        this.tabSize = tabSize || 8;
-        this.lastColumnPos = this.lastColumnValue = 0;
-    };
-
-    sutil.StringStream.prototype = {
-        eol: function () { return this.pos >= this.string.length; },
-        sol: function () { return this.pos === 0; },
-        peek: function () { return this.string.charAt(this.pos) || undefined; },
-        next: function () {
-            if (this.pos < this.string.length)
-                return this.string.charAt(this.pos++);
-        },
-        eat: function (match) {
-            var ch = this.string.charAt(this.pos);
-            var ok;
-            if (typeof match == "string") ok = ch == match;
-            else ok = ch && (match.test ? match.test(ch) : match(ch));
-            if (ok) { ++this.pos; return ch; }
-        },
-        eatWhile: function (match) {
-            var start = this.pos;
-            while (this.eat(match)) { }
-            return this.pos > start;
-        },
-        eatSpace: function () {
-            var start = this.pos;
-            while (/[\s\u00a0]/.test(this.string.charAt(this.pos)))++this.pos;
-            return this.pos > start;
-        },
-        skipToEnd: function () { this.pos = this.string.length; },
-        skipTo: function (ch) {
-            var found = this.string.indexOf(ch, this.pos);
-            if (found > -1) { this.pos = found; return true; }
-        },
-        backUp: function (n) { this.pos -= n; },
-        column: function () {
-            if (this.lastColumnPos < this.start) {
-                this.lastColumnValue = countColumn(this.string, this.start, this.tabSize, this.lastColumnPos, this.lastColumnValue);
-                this.lastColumnPos = this.start;
-            }
-            return this.lastColumnValue;
-        },
-        indentation: function () { return countColumn(this.string, null, this.tabSize); },
-        match: function (pattern, consume, caseInsensitive) {
-            if (typeof pattern == "string") {
-                var cased = function (str) { return caseInsensitive ? str.toLowerCase() : str; };
-                var substr = this.string.substr(this.pos, pattern.length);
-                if (cased(substr) == cased(pattern)) {
-                    if (consume !== false) this.pos += pattern.length;
-                    return true;
-                }
-            } else {
-                var match = this.string.slice(this.pos).match(pattern);
-                if (match && match.index > 0) return null;
-                if (match && consume !== false) this.pos += match[0].length;
-                return match;
-            }
-        },
-        current: function () { return this.string.slice(this.start, this.pos); }
-    };
-
-    // See if "".split is the broken IE version, if so, provide an
-    // alternative way to split lines.
-    sutil.splitLines = "\n\nb".split(/\n/).length != 3 ? function (string) {
-        var pos = 0, result = [], l = string.length;
-        while (pos <= l) {
-            var nl = string.indexOf("\n", pos);
-            if (nl == -1) nl = string.length;
-            var line = string.slice(pos, string.charAt(nl - 1) == "\r" ? nl - 1 : nl);
-            var rt = line.indexOf("\r");
-            if (rt != -1) {
-                result.push(line.slice(0, rt));
-                pos += rt + 1;
-            } else {
-                result.push(line);
-                pos = nl + 1;
-            }
-        }
-        return result;
-    } : function (string) { return string.split(/\r\n?|\n/); };
-
-    if (this.CodeMirror||false) {
-        CodeMirror.defineMode("tidl", _createTokenizer);
-        sutil.StringStream = CodeMirror.StringStream;
-        sutil.splitLines = CodeMirror.splitLines;
-    }
-
-    tidl.parseWithAnnotations=function _parseWithAnnotations(idlText, annotationText) {
-        var r1=tidl.parse(idlText);
-        var r2=null;
+    tidl.parseWithAnnotations = function _parseWithAnnotations(idlText, annotationText) {
+        var r1 = tidl.parse(idlText);
+        var r2 = null;
 
         if (annotationText) {
-            r2=tidl.parse(annotationText);
+            r2 = tidl.parse(annotationText);
         }
 
-        if (r1!==null && r1.model!==null) {
-            if (r2!==null && r2.model!==null) {
+        if (r1 !== null && r1.model !== null) {
+            if (r2 !== null && r2.model !== null) {
                 r1.model.updateEndpoints(r2.model);
+                r1.model.updateExceptionTypes(r2.model);
+            } else {
+                r1.model.updateEndpoints(null);
+                r1.model.updateExceptionTypes(null);
             }
         }
-        return [r1,r2];
+        return [r1, r2];
     };
 
-    tidl.parse=function _parse(idltext,tabsize) {
-        var tokenizer=_createTokenizer({},{});
-        var state=tokenizer.startState();
-        var msgs=[];
-        
-        if (idltext===null || idltext===undefined) {
+    tidl.parse = function _parse(idltext, tabsize) {
+        var tokenizer = _createTokenizer({}, {});
+        var state = tokenizer.startState();
+        var msgs = [];
+
+        if (idltext === null || idltext === undefined) {
             return null;
         }
 
-        var lines=sutil.splitLines(idltext);
+        var lines = sutil.splitLines(idltext);
 
-        lines.forEach(function(val,index,array){
-            var stream=new sutil.StringStream(val,tabsize||4);
+        lines.forEach(function (val, index, array) {
+            var stream = new sutil.StringStream(val, tabsize || 4);
             var token = tokenizer.token;
             var style;
             while (!stream.eol()) {
-                var colstart=stream.pos;
-                style=token(stream,state);
-                stream.start=stream.pos;
-                var colend=stream.pos;
-                if (style){
-                var iserror=(style.indexOf('error-mark')!=-1),
-                iswarning=(style.indexOf('warning-mark')!=-1),
-                isinfo=(style.indexOf('info-mark')!=-1);
-                    if(iserror||iswarning||isinfo){
-                        var ci=style.indexOf('m-');
-                        var code=style.substr(ci+2);
+                var colstart = stream.pos;
+                style = token(stream, state);
+                stream.start = stream.pos;
+                var colend = stream.pos;
+                if (style) {
+                    var iserror = (style.indexOf('error-mark') != -1),
+                    iswarning = (style.indexOf('warning-mark') != -1),
+                    isinfo = (style.indexOf('info-mark') != -1);
+                    if (iserror || iswarning || isinfo) {
+                        var ci = style.indexOf('m-');
+                        var code = style.substr(ci + 2);
                         msgs.push({
-                            line:index+1,
-                            col:colstart,
-                            charcount:colend-colstart,
-                            code:code,
-                            type:(iserror?'error':(iswarning?'warning':'info'))
+                            line: index + 1,
+                            col: colstart,
+                            charcount: colend - colstart,
+                            code: code,
+                            type: (iserror ? 'error' : (iswarning ? 'warning' : 'info'))
                         });
                     }
                 }
             }
         });
-        return {model:state.model, messages:msgs};
+        if (state.context.length>0) {
+            if (state.context[0] !== state.model){
+                msgs.push({
+                                line: lines.length,
+                                col: lines[lines.length-1].length-1,
+                                charcount: 1,
+                                code: '2003',
+                                type: 'error'
+                            });
+            }
+        }
+        state.model.updateEndpoints(null);
+        state.model.updateExceptionTypes(null);
+        return { model: state.model, messages: msgs };
     };
-
-    // global on the server, window in the browser 
-    var root = this, previous_tidl = root.tidl;
-
-    if (typeof module !== 'undefined' && module.exports) {
-        module.exports = tidl;
-    }
-    else {
-        root.tidl = tidl;
-    }
-
-    tidl.noConflict = function () {
-        root.tidl = previous_tidl;
-        return tidl;
-    };
-})(this);
