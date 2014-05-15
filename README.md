@@ -3,6 +3,12 @@ tidl
 
 Utilities for working with tidl files.
 
+* [Current Status](#Current-Status)
+* [Usage](#Usage)
+* [Getting the source](#Getting-the-source)
+* [License](#License)
+* [Contributors](#Contributors)
+
 Current Status
 --------------
 
