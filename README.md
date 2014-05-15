@@ -84,9 +84,12 @@ Make sure you have the following Prerequisites intsalled
 
 ```shell
 >git clone git://github.com/rravuri/tidl.git tidl
+...
 >cd tidl
 >npm install
+...
 >grunt build
+...
 ```
 
 License
