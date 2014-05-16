@@ -156,6 +156,10 @@ describe('interface', function() {
 			msg.type.should.be.equal('info');
 			msg.line.should.be.equal(1);
 			msg.col.should.be.equal(10);
+			res.model.Service.should.be.equal('A');
+			res.model.should.have.property('Interfaces');
+			var intfA = res.model.Interfaces['a'];
+			intfA.Name.should.be.equal('a');
 		});
 	});
 
@@ -191,5 +195,22 @@ describe('interface', function() {
 			msg.line.should.be.equal(2);
 			msg.col.should.be.equal(0);
 		});
+
+		it('should parse an interface with valid version', function(){
+			var res = tidl.parse('interface A exposes S { \n@version 1.0.0-rc1; }');
+			res.should.be.an.Object;
+			res.model.should.be.an.instanceOf(tidl.IdlModel);
+			var msg = from(res.messages).where(function(m) {
+				return m.type == 'error'
+			}).firstOrDefault();
+			assert.equal(msg, null);
+			res.model.Service.should.be.equal('S');
+			res.model.should.have.property('Interfaces');
+			var intfA = res.model.Interfaces['A'];
+			intfA.Service.should.be.equal('S');
+			intfA.Version().toString().should.be.equal('1.0.0-rc1'); 
+
+			intfA.Name.should.be.equal('A');
+		})
 	});
 });
