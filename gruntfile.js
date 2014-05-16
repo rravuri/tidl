@@ -127,7 +127,7 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-watch');
 
 	grunt.registerTask('default',['concat']);
-	grunt.registerTask('qtest',['concat', 'blanket', 'mochaTest:test', 'mochaTest:coverage']);
-	grunt.registerTask('test', ['clean', 'concat', 'jshint', 'blanket', 'copy', 'mochaTest:test', 'mochaTest:coveralls']);
+	grunt.registerTask('qtest',['concat', 'jshint', 'blanket', 'mochaTest:test', 'mochaTest:coverage']);
+	grunt.registerTask('test', ['clean', 'concat', 'jshint', 'blanket', 'copy', 'mochaTest']);
 	grunt.registerTask('build', ['concat', 'uglify']);
 };
