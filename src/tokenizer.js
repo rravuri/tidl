@@ -910,7 +910,8 @@
                         }
                     }
                     else if (contains(['tidl', 'version', 'since', 'revision'], attribute.Name)) {
-                        if ((matches = stream.match(/\d+\.\d+.\d+(\-[0-9a-zA-Z]+(\.[0-9a-zA-Z]+)*)?(\+[0-9a-zA-Z]+(\.[0-9a-zA-Z]+)*)?/, true)) !== null) {
+                        //if ((matches = stream.match(/\d+\.\d+.\d+(\-[0-9a-zA-Z]+(\.[0-9a-zA-Z]+)*)?(\+[0-9a-zA-Z]+(\.[0-9a-zA-Z]+)*)?/, true)) !== null) {
+                        if ((matches = stream.match(/(\d+\.\d+\.\d+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?/, true)) !== null) {
                             attribute.Values.push(matches[0]);
                             attribute.Type = 'Version';
                             state.lastToken = 'v';

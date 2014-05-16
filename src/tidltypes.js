@@ -28,18 +28,23 @@
     }
 
     function fnGetVersion() {
-        var v = {
-            Major: 0,
-            Minor: 0,
-            Build: 0
+        function Version() {
+            this.Major='0';
+            this.Minor='0';
+            this.Build='0';
+        }
+
+        Version.prototype.toString=function(){
+            return this.Major+'.'+this.Minor+'.'+this.Build;
         };
 
+        var v=new Version();
         var attr = this.getAttribute('version');
         if (attr !== null) {
             var d = attr.Values[0].split('.');
             v.Major = d[0];
             v.Minor = d[1];
-            v.Build = d[2];
+            v.Build = d[2]; 
         }
         return v;
     }
