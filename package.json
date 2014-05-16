@@ -1,7 +1,11 @@
 {
   "name": "tidl",
   "version": "0.1.2",
-  "description": "Utility functions for tidl files",
+  "description": "Utility functions for tidl files, tidl parser, tidl code generator",
+  "keywords": [
+    "tidl"
+  ],
+  "homepage": "http://rravuri.github.io/tidl/",
   "main": "lib/tidl.js",
   "bin": {
     "tidl": "./bin/cli.js"
@@ -16,10 +20,10 @@
     "type": "git",
     "url": "https://github.com/rravuri/tidl.git"
   },
-  "keywords": [
-    "tidl"
-  ],
-  "author": "Rakesh Ravuri",
+  "author": { 
+    "name": "Rakesh Ravuri",
+    "email": "rravuri@gmail.com"
+    },
   "license": "MIT",
   "dependencies": {
     "commander": "2.2.x",

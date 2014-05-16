@@ -106,18 +106,11 @@ module.exports = function(grunt) {
 				dateFormat: function(time) {
 					grunt.log.writeln('The watch finished in ' + time + 'ms at' + (new Date()).toString());
 					grunt.log.writeln('Waiting for more changes...');
-				},
-				spawn:false
+				}
 			},
 			src:{
 				files: ['src/**/*.js', 'test/**/*.js'],
 				tasks:['qtest']
-			},
-			configFiles: {
-				files: [ 'Gruntfile.js'],
-				options: {
-					reload: true
-				}
 			}
 		}
 	});
@@ -134,7 +127,7 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-watch');
 
 	grunt.registerTask('default',['concat']);
-	grunt.registerTask('qtest',['concat', 'blanket', 'mochaTest:test']);
-	grunt.registerTask('test', ['clean', 'concat', 'jshint', 'blanket', 'copy', 'mochaTest']);
+	grunt.registerTask('qtest',['concat', 'blanket', 'mochaTest:test', 'mochaTest:coverage']);
+	grunt.registerTask('test', ['clean', 'concat', 'jshint', 'blanket', 'copy', 'mochaTest:test', 'mochaTest:coveralls']);
 	grunt.registerTask('build', ['concat', 'uglify']);
 };
