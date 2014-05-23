@@ -3,6 +3,14 @@ tidl
 
 Utilities for working with tidl files.
 
+* [Current Status](#current-Status)
+* [Usage](#usage)
+  * [Installing the parser](#installing-the-parser)
+  * [Uninstalling the parser](#uninstalling-the-parser)
+* [Building from source](#building-from-source)
+* [License](#license)
+* [Contributors](#contributors)
+
 Current Status
 --------------
 
@@ -67,12 +75,22 @@ tidl parser can be uninstalled and managed via [npm](https://npmjs.org/), the [N
 unbuild tidl@x.y.z
 ```
 
-Getting the source
+Building from source
 ------------------
 
-Make sure you have git installed and then run this command from a terminal window (Linux/Unix) or in a "Git Bash Here" window using msysgit for Windows
+Make sure you have the following Prerequisites intsalled
+* git 
+* node >0.10
 
-`git clone git://github.com/rravuri/tidl.git tidl`
+```shell
+>git clone git://github.com/rravuri/tidl.git tidl
+...
+>cd tidl
+>npm install
+...
+>grunt build
+...
+```
 
 License
 -------

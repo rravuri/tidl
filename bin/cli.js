@@ -184,12 +184,34 @@
                 }
             }
 
-            var files = glob.sync(filename, {}); //filename.split(',');
-            console.log(filename);
+            var files = glob.sync(filename, {}); 
+            if (options.exclude == undefined){
+                var ignorefile =fulltemplatefilename+'\\.tidlignore';
+                if (fs.statSync(fulltemplatefilename).isDirectory()) {
+                    if (fs.existsSync(ignorefile)) {
+                        options.exclude=fs.readFileSync(ignorefile).toString().replace(/\r\n/g,';');
+                        if (program.verbose) {
+                            console.log('Ignore patten: '+options.exclude);
+                        }
+                    }
+                }
+            }
+
             files.forEach(function(val, index, array) {
-                var results = parse(val, options);
 
                 function generate(tfile) {
+
+                    if (options.exclude !== undefined) {
+                        if ( fromjs(options.exclude.split(';'))
+                            .any(function(pattern){ 
+                                return minimatch(tfile, pattern, { matchBase: true });
+                            }) ) {
+                            if (program.verbose) {
+                                console.log('excluding template file: ' + tfile);
+                            }
+                            return;
+                        }
+                    }
                     var stat = fs.statSync(tfile);
                     if (stat.isDirectory()) {
                         var tfiles = fs.readdirSync(tfile);
@@ -198,17 +220,8 @@
                         });
                         return;
                     } else {
-                        if (options.exclude !== undefined) {
-                            if (minimatch(tfile, options.exclude, {
-                                matchBase: true
-                            })) {
-                                if (program.verbose) {
-                                    console.log('excluding template file: ' + tfile);
-                                }
-                                return;
-                            }
-                        }
                         var fname = path.basename(tfile);
+                        if (fname=='.tidlignore') return;
                         var dname = path.dirname(tfile);
                         dname = path.join(outputdir, dname.substr(fulltemplatefilename.length));
 
@@ -240,6 +253,9 @@
 
                     }
                 }
+
+
+                var results = parse(val, options);
 
                 if (results && results[0]) {
                     generate(fulltemplatefilename);

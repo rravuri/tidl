@@ -1,2 +1,7 @@
 node_modules
-coverage
+*.sublime-project
+*.sublime-workspace
+output
+coverage/lib
+.gitattributes
+
