@@ -371,7 +371,7 @@
                             state.setWarn(1007);
                         }
                         if (contains(['description', 'since','method','urlTemplate','bodyParam',
-                            'return', 'seealso'], attribute.Name)) {
+                            'return', 'version'], attribute.Name)) {
                             try {
                                 if (contains(obj.Attributes, function (a) { return a.Name == attribute.Name; })) {
                                     state.setError(2007);
