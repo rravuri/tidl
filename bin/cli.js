@@ -119,7 +119,7 @@
         .command('parse [filename]')
         .description('parse the specified tidl file.')
         .option('-f, --format <type>', 'Output format [json]', 'json')
-        .option('-e, --outputexp <type>', 'Output JSON Path expression default: $.*', '$.*')
+        .option('-e, --outputexp <type>', 'Output JSON Path expression default: $.model', '$.model')
         .action(function(filename, options) {
             if (program.verbose) {
                 console.log('tidl %s', pack.version);
@@ -139,7 +139,7 @@
             files.forEach(function(val, index, array) {
                 var results = parse(val, options);
                 if (options.format.toLowerCase() == 'json' && results && results[0]) {
-                    console.log(JSON.stringify(jsonPath.eval(results[0].model, options.outputexp), null, '\t'));
+                    console.log(JSON.stringify(jsonPath.eval(results[0], options.outputexp), null, '\t'));
                 }
             });
             process.exit(0);

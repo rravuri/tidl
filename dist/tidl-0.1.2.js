@@ -1157,7 +1157,7 @@ var tidl={};
                     if ((matches = stream.match(ID, true)) !== null) {
                         attribute.Name = matches[0];
                         if (contains(['description', 'parameter', 'since','method','urlTemplate','bodyParam',
-                            'revision', 'exception', 'return', 'value', 'seealso'], attribute.Name) === false) {
+                            'revision', 'version', 'exception', 'return', 'value', 'seealso'], attribute.Name) === false) {
                             state.setWarn(1007);
                         }
                         if (contains(['description', 'since','method','urlTemplate','bodyParam',

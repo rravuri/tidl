@@ -208,7 +208,7 @@ describe('interface', function() {
 			res.model.should.have.property('Interfaces');
 			var intfA = res.model.Interfaces['A'];
 			intfA.Service.should.be.equal('S');
-			intfA.Version().toString().should.be.equal('1.0.0-rc1'); 
+			intfA.Version().toString().should.be.equal('1.0.0-rc1');
 
 			intfA.Name.should.be.equal('A');
 		})
