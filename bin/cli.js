@@ -186,7 +186,7 @@
 
             var files = glob.sync(filename, {}); 
             if (options.exclude == undefined){
-                var ignorefile =fulltemplatefilename+'\\.tidlignore';
+                var ignorefile = path.join(fulltemplatefilename, '.tidlignore');
                 if (fs.statSync(fulltemplatefilename).isDirectory()) {
                     if (fs.existsSync(ignorefile)) {
                         options.exclude=fs.readFileSync(ignorefile).toString().replace(/\r\n/g,';');
