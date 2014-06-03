@@ -149,6 +149,28 @@ var tidl={};
         return null;
     }
 
+    function fnGetVersion() {
+        function Version() {
+            this.Major='0';
+            this.Minor='0';
+            this.Build='0';
+        }
+
+        Version.prototype.toString=function(){
+            return this.Major+'.'+this.Minor+'.'+this.Build;
+        };
+
+        var v=new Version();
+        var attr = this.getAttribute('version');
+        if (attr !== null) {
+            var d = attr.Values[0].split('.');
+            v.Major = d[0];
+            v.Minor = d[1];
+            v.Build = d[2]; 
+        }
+        return v;
+    }
+
     function IdlAttr() {
         this.Name = '';
         this.Type = 'String';
@@ -245,6 +267,7 @@ var tidl={};
 
         this.getAttribute = fnGetAttribute;
         this.getDescription = fnGetDescription;
+        this.Version = fnGetVersion;
         this.getOperation = function(name) {
             return fnFindInList(this.Operations, name);
         };
@@ -306,6 +329,7 @@ var tidl={};
 
         this.getAttribute = fnGetAttribute;
         this.getDescription = fnGetDescription;
+        this.Version = fnGetVersion;
 
         this.getType = function(name) {
             return fnFindInList(this.Types, name);
@@ -633,45 +657,6 @@ var tidl={};
 
     }
 
-    IdlModel.prototype.Version = function() {
-        var v = {
-            Major: 0,
-            Minor: 0,
-            Build: 0
-        };
-
-        for (i = 0; i < this.Attributes.length; ++i) {
-            if (this.Attributes[i].Name == 'version') {
-                var d = this.Attributes[i].Values[0].split('.');
-                v.Major = d[0];
-                v.Minor = d[1];
-                v.Build = d[2];
-                break;
-            }
-        }
-        return v;
-    };
-
-
-    IdlIntf.prototype.Version = function() {
-        var v = {
-            Major: 0,
-            Minor: 0,
-            Build: 0
-        };
-
-        for (i = 0; i < this.Attributes.length; ++i) {
-            if (this.Attributes[i].Name == 'version') {
-                var d = this.Attributes[i].Values[0].split('.');
-                v.Major = d[0];
-                v.Minor = d[1];
-                v.Build = d[2];
-                break;
-            }
-        }
-        return v;
-    };
-
     IdlModel.prototype.updateEndpoints = function(annoModel) {
         var idlModel = this;
         var i;
@@ -705,6 +690,7 @@ var tidl={};
                 } else {
                     restendpoint.Values = [];
                 }
+
                 var majorVersion = intf.Version().Major === 0 ? idlModel.Version().Major : intf.Version().Major;
                 restendpoint.Values.push(getPostMethods(op, intfAnno));
                 restendpoint.Values.push("v" + majorVersion + "/" + intf.Name.toLowerCase() + "/" + getHttpRoute(op, intf, intfAnno));
@@ -1172,11 +1158,11 @@ var tidl={};
                     if ((matches = stream.match(ID, true)) !== null) {
                         attribute.Name = matches[0];
                         if (contains(['description', 'parameter', 'since','method','urlTemplate','bodyParam',
-                            'revision', 'exception', 'return', 'value', 'seealso'], attribute.Name) === false) {
+                            'revision', 'version', 'exception', 'return', 'value', 'seealso'], attribute.Name) === false) {
                             state.setWarn(1007);
                         }
                         if (contains(['description', 'since','method','urlTemplate','bodyParam',
-                            'return', 'seealso'], attribute.Name)) {
+                            'return', 'version'], attribute.Name)) {
                             try {
                                 if (contains(obj.Attributes, function (a) { return a.Name == attribute.Name; })) {
                                     state.setError(2007);
@@ -1715,7 +1701,8 @@ var tidl={};
                         }
                     }
                     else if (contains(['tidl', 'version', 'since', 'revision'], attribute.Name)) {
-                        if ((matches = stream.match(/\d+\.\d+.\d+(\-[0-9a-zA-Z]+(\.[0-9a-zA-Z]+)*)?(\+[0-9a-zA-Z]+(\.[0-9a-zA-Z]+)*)?/, true)) !== null) {
+                        //if ((matches = stream.match(/\d+\.\d+.\d+(\-[0-9a-zA-Z]+(\.[0-9a-zA-Z]+)*)?(\+[0-9a-zA-Z]+(\.[0-9a-zA-Z]+)*)?/, true)) !== null) {
+                        if ((matches = stream.match(/(\d+\.\d+\.\d+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?/, true)) !== null) {
                             attribute.Values.push(matches[0]);
                             attribute.Type = 'Version';
                             state.lastToken = 'v';
