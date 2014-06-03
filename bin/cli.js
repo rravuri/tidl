@@ -93,8 +93,8 @@
             encoding: 'utf8'
         });
         bliss = new Bliss({
-            context:{
-                fromjs:fromjs
+            context: {
+                fromjs: fromjs
             }
         });
         var tpl = bliss.compile(template);

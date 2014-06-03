@@ -568,6 +568,7 @@
                 } else {
                     restendpoint.Values = [];
                 }
+
                 var majorVersion = intf.Version().Major === 0 ? idlModel.Version().Major : intf.Version().Major;
                 restendpoint.Values.push(getPostMethods(op, intfAnno));
                 restendpoint.Values.push("v" + majorVersion + "/" + intf.Name.toLowerCase() + "/" + getHttpRoute(op, intf, intfAnno));
