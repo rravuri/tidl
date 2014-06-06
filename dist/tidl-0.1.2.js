@@ -127,6 +127,15 @@ var tidl={};
         return null;
     }
 
+    function fnFindInterface(interfaceList, name) {
+        var intf = null;
+        for (var infn in interfaceList) {
+            intf = interfaceList[infn];
+            if (intf.Name == name) return intf;
+        }
+        return null;
+    }
+
     function fnGetAttribute(name, value0) {
         for (i = 0; i < this.Attributes.length; ++i) {
             var attr = this.Attributes[i];
@@ -184,6 +193,22 @@ var tidl={};
         newattr.Type = this.Type;
         newattr.Values = this.Values.concat([]);
         return newattr;
+    };
+
+    IdlAttr.prototype.updateHeaderMappings = function (annoModelOperation) {
+        var idlAttribute = this;
+        var i;
+        var attrib = null, headerMapping = null;
+        if (annoModelOperation) {
+            for (i = 0; i < annoModelOperation.Attributes.length; ++i) {
+                attrib = annoModelOperation.Attributes[i];
+                //Verify if there is a attribute of type parameter with the same name in the annotated model interface's operation    
+                if (attrib.Type === 'Parameter' && attrib.Name === 'parameter' && attrib.Values[0] === idlAttribute.Values[0]) {
+                    headerMapping = attrib.Values[1];
+                    idlAttribute.Values.push('headerMapping:' + headerMapping);
+                }
+            }
+        }
     };
 
     function IdlType() {
@@ -343,6 +368,9 @@ var tidl={};
         this.getException = function(name) {
             return fnFindInList(this.Exceptions, name);
         };
+        this.getInterface = function (name) {
+            return fnFindInterface(this.Interfaces, name);
+        };
         return this;
     }
 
@@ -431,9 +459,10 @@ var tidl={};
     var AnnotationAttribute_HttpMethod = "method";
     var AnnotationAttribute_BodyParameterName = "bodyParam";
     var AnnotationAttribute_HttpStatus = "statusCode";
+    var AnnotationAttribute_ParameterHeaderMapping = "parameter";
     var FromBody_Suffix = "FromBody";
 
-    function readOperationAttributeFromAnnontationFile(op, intfAnno, attributeName) {
+    function readOperationAttributeFromAnnontationFile(op, intfAnno, attributeQualifier, attributeName) {
         var value = '';
         if (intfAnno === null || intfAnno === undefined) return value;
 
@@ -451,19 +480,23 @@ var tidl={};
             }
             //Check if the current operation has an custom attribute value specified in the annontated file
             var urlAttrib = aop.getAttribute(AnnotationAttribute_UrlRouteTemplate);
-
-            if ((attributeName == AnnotationAttribute_UrlRouteTemplate) && urlAttrib !== null) {
+            if ((attributeQualifier == AnnotationAttribute_UrlRouteTemplate) && urlAttrib !== null) {
                 return urlAttrib.Values[0];
             }
 
             var methodAttrib = aop.getAttribute(AnnotationAttribute_HttpMethod);
-            if ((attributeName == AnnotationAttribute_HttpMethod) && methodAttrib !== null) {
+            if ((attributeQualifier == AnnotationAttribute_HttpMethod) && methodAttrib !== null) {
                 return methodAttrib.Values[0];
             }
 
             var bodyAttrib = aop.getAttribute(AnnotationAttribute_BodyParameterName);
-            if ((attributeName == AnnotationAttribute_BodyParameterName) && bodyAttrib !== null) {
+            if ((attributeQualifier == AnnotationAttribute_BodyParameterName) && bodyAttrib !== null) {
                 return bodyAttrib.Values[0];
+            }
+
+            var paramHeaderMappingAttrib = aop.getAttribute(AnnotationAttribute_ParameterHeaderMapping, attributeName);
+            if ((attributeQualifier == AnnotationAttribute_ParameterHeaderMapping) && paramHeaderMappingAttrib !== null) {
+                return paramHeaderMappingAttrib.Values[0];
             }
         }
 
@@ -505,10 +538,13 @@ var tidl={};
         return (endsWith(p.Name, FromBody_Suffix) ? p.Name.substr(0, p.Name.length - 8) : p.Name);
     }
 
-    function excludeParameterFromQuerystring(p, route, bodyParam) {
+    function excludeParameterFromQuerystring(p, route, bodyParam, headerMapping) {
         //Parameters passed via HTTP method body are excluded from querystring
         if ((bodyParam === null || bodyParam === undefined || bodyParam === '') && endsWith(p.Name, FromBody_Suffix)) return true;
         if (!(bodyParam === null || bodyParam === undefined || bodyParam === '') && p.Name == bodyParam) return true;
+
+        //If the parameter is mapped to a Http header in annotation file, then its excluded
+        if (headerMapping !== null && headerMapping !== '') { return true; }
 
         if ((route === null || route === undefined || route === '')) {
             //Mandatory parameters except of type set or list, are excluded from querystring (since they are part of route)
@@ -542,12 +578,14 @@ var tidl={};
         //Check if method override exists in annotation file
         var route = readOperationAttributeFromAnnontationFile(op, intfAnno, AnnotationAttribute_UrlRouteTemplate);
         var bodyParam = readOperationAttributeFromAnnontationFile(op, intfAnno, AnnotationAttribute_BodyParameterName);
-
+        var parameterHeaderMapping = '';
         var isf = true;
         var sb = '';
         for (var pn in op.Parameters) {
             var p = op.Parameters[pn];
-            if (excludeParameterFromQuerystring(p, route, bodyParam)) continue;
+            parameterHeaderMapping = readOperationAttributeFromAnnontationFile(op, intfAnno, AnnotationAttribute_ParameterHeaderMapping, p.Name);
+            if (excludeParameterFromQuerystring(p, route, bodyParam, parameterHeaderMapping)) continue;
+
             if (isf) {
                 sb += "?";
                 isf = false;
@@ -657,28 +695,31 @@ var tidl={};
 
     }
 
-    IdlModel.prototype.updateEndpoints = function(annoModel) {
+    IdlModel.prototype.updateEndpoints = function (annoModel) {
         var idlModel = this;
         var i;
-        var intfAnno;
+        var restendpoint = null, intf = null, intfAnno = null, opAnno = null, op = null, attribute = null;
+
         for (var infn in idlModel.Interfaces) {
-            var intf = idlModel.Interfaces[infn];
+            intf = idlModel.Interfaces[infn];
+            //Verify and extract the matching interface from the annotated model
             if (annoModel) {
-                try {
-                    intfAnno = annoModel.Interfaces[infn];
-                } catch (e) {
-                    intfAnno = null;
-                }
-            } else {
-                intfAnno = null;
+                intfAnno = annoModel.getInterface(intf.Name);
             }
+
             for (var opi in intf.Operations) {
-                var op = intf.Operations[opi];
-                var restendpoint = null;
+                op = intf.Operations[opi];
+                restendpoint = null;
+
+                //Verify and extract the matching operation from the annotated model interface
+                if (intfAnno) {
+                    opAnno = intfAnno.getOperation(op.Name);
+                }
                 for (i = 0; i < op.Attributes.length; ++i) {
-                    if (op.Attributes[i].Name == 'restendpoint') {
-                        restendpoint = op.Attributes[i];
-                        break;
+                    attribute = op.Attributes[i];
+                    attribute.updateHeaderMappings(opAnno);
+                    if (attribute.Name === 'restendpoint') {
+                        restendpoint = attribute;
                     }
                 }
                 if (restendpoint === null) {
@@ -690,7 +731,8 @@ var tidl={};
                 } else {
                     restendpoint.Values = [];
                 }
-                var majorVersion = intf.Version().Major === 0 ? idlModel.Version().Major : intf.Version().Major;
+
+                var majorVersion = intf.Version().Major === "0" ? idlModel.Version().Major : intf.Version().Major;
                 restendpoint.Values.push(getPostMethods(op, intfAnno));
                 restendpoint.Values.push("v" + majorVersion + "/" + intf.Name.toLowerCase() + "/" + getHttpRoute(op, intf, intfAnno));
                 restendpoint.Values.push(getQueryString(op, intfAnno));
@@ -779,7 +821,7 @@ var tidl={};
         '2005': "Unexpected character: Expecting an n.n.n version as the first value for the attributes 'tidl', 'version', 'since' or 'revision'.",
         '2006': "Unexpected character: Expecting a string as the first value for the attribute.",
         '2007': "Duplicate: there can only be one instance per scope.",
-        '2008': "",
+        '2008': "Unrecognized reserved parameter: Only reserved parameter names can begin with underscore.",
         '2009': "",
         '2010': "Unexpected character: Expected a valid interface name.",
         '2011': "Unexpected character: Expected 'exposes' keyword.",
@@ -789,8 +831,9 @@ var tidl={};
         '3001': "Standards: Suggested to start with a capital letter."
     };
     function _createTokenizer(config, parserConfig) {
-        var ID = /^[a-zA-Z][a-zA-Z0-9_]*/;
+        var ID = /^[a-zA-Z_][a-zA-Z0-9_]*/;
         var builtintypes = ["boolean", "byte", "short", "int", "long", "float", "double", "decimal", "string", "datetime", "list", "set", "map"];
+        var reservedParams = ["_region", "_language", "_business", "_channel", "_accept", "_userId", "_appKey"];
         function contains(items, item) {
             for (var i = 0; i < items.length; i++) {
                 if (typeof item == 'function') {
@@ -803,6 +846,7 @@ var tidl={};
             }
             return false;
         }
+
 
         function tokenString(quote, col) {
             return function _tokenString(stream, state) {
@@ -1061,8 +1105,12 @@ var tidl={};
                         return tokenize(stream, state);
                     }
                     else {
-                        stream.match(ID);
                         param.Name = matches[0];
+                        if (param.Name.charAt(0)==="_" && !contains(reservedParams, param.Name)) {
+                            stream.next();
+                            return "error error-mark m-2008";
+                        }
+                        stream.match(ID);
                         state.lastToken = 'p';
                         obj.Parameters[param.Name] = param;
                         state.context.shift();

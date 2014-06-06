@@ -237,5 +237,25 @@ describe('tidl', function() {
 			msg.col.should.be.equal(0);
 
 		});
+
+		it('should allow reserved parameter names starting with underscore in "parse" method', function () {
+		    var res = tidl.parse('@tidl 2.0.0; service S { \n  interface A exposes S{ \n void op(int cC, string _region){} \n} \n}');
+		    var msg = from(res.messages).where(function (m) {
+		        return m.code == '2003'
+		    }).firstOrDefault();
+		    (msg === undefined|| msg === null).should.be.true;
+		});
+
+		it('should not allow user parameter names to start with underscore in "parse" method', function () {
+		    var res = tidl.parse('@tidl 2.0.0; service S { \n  interface A exposes S{ \n void op(int cC, string _userParam){} \n} \n}');
+		    var msg = from(res.messages).where(function (m) {
+		        return m.code == '2008'
+		    }).firstOrDefault();
+		    assert.notEqual(msg, null, 'there should be an message with code 2008');
+		    assert.notEqual(msg, undefined, 'there should be an message with code 2008');
+		    msg.type.should.be.equal('error');
+		});
+
+
 	});
 });
