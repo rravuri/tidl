@@ -1,6 +1,7 @@
     function _createTokenizer(config, parserConfig) {
-        var ID = /^[a-zA-Z][a-zA-Z0-9_]*/;
+        var ID = /^[a-zA-Z_][a-zA-Z0-9_]*/;
         var builtintypes = ["boolean", "byte", "short", "int", "long", "float", "double", "decimal", "string", "datetime", "list", "set", "map"];
+        var reservedParams = ["_region", "_language", "_business", "_channel", "_accept", "_userId", "_appKey"];
         function contains(items, item) {
             for (var i = 0; i < items.length; i++) {
                 if (typeof item == 'function') {
@@ -13,6 +14,7 @@
             }
             return false;
         }
+
 
         function tokenString(quote, col) {
             return function _tokenString(stream, state) {
@@ -271,8 +273,12 @@
                         return tokenize(stream, state);
                     }
                     else {
-                        stream.match(ID);
                         param.Name = matches[0];
+                        if (param.Name.charAt(0)==="_" && !contains(reservedParams, param.Name)) {
+                            stream.next();
+                            return "error error-mark m-2008";
+                        }
+                        stream.match(ID);
                         state.lastToken = 'p';
                         obj.Parameters[param.Name] = param;
                         state.context.shift();
