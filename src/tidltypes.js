@@ -53,6 +53,20 @@
         this.Name = '';
         this.Type = 'String';
         this.Values = [];
+        this.toString=function() {
+            var attr='@'+this.Name+' ';
+            var i=0;
+            if (this.Type!=='String' && this.Values.length>0){
+                attr+=this.Values[0];
+                i=1;
+            }
+            for(;i<this.Values.length;i++){
+                if (i!==0) attr+=',';
+                attr+=JSON.stringify(this.Values[i]);
+            }
+            attr+=';';
+            return attr;
+        };
         return this;
     }
 
@@ -67,6 +81,18 @@
     function IdlType() {
         this.Name = '';
         this.Types = [];
+        this.toString=function() {
+            var t = this.Name;
+            if (this.Types.length>0) {
+                t+='<';
+                for(i=0;i<this.Types.length;++i){
+                    if (i!==0) t+=',';
+                    t+=this.Types[i].toString();
+                }
+                t+='>';
+            }
+            return t;
+        };
         return this;
     }
 
@@ -85,6 +111,18 @@
         this.Type = new IdlType();
         this.Modifiers = [];
         this.Mandatory = false;
+        this.toString=function(){
+            var p='';
+            for(i=0;i<this.Modifiers.length;++i){
+                p+=this.Modifiers[i]+' ';
+            }
+            if (this.Mandatory){
+                p+='mandatory ';
+            }
+            p+=this.Type.toString()+' ';
+            p+=this.Name;
+            return p;
+        };
         return this;
     }
 
@@ -106,6 +144,45 @@
         this.BaseTypes = [];
         this.IsAsync = false;
         this.type = '';
+        this.toString=function(){
+            var o='', i=0;
+            if (this.IsAsync) o+='async ';
+            if (this.type=='operation'){
+                o+=this.Return.toString()+' ';
+            }
+            else{
+                o+=this.type+' ';
+            }
+
+            o+=this.Name+'(';
+
+            for (var pn in this.Parameters) {
+                if (i!==0) o+=',';
+                o+=this.Parameters[pn].toString();
+                i++;
+            }
+            o+=')';
+            if (this.Exceptions.length>0) {
+                o+=' throws ';
+                for(i=0;i<this.Exceptions.length;++i){
+                    if (i!==0) o+=',';
+                    o+=this.Exceptions[i];
+                }
+            }
+            else if (this.BaseTypes.length>0) {
+                o+=' extends ';
+                for(i=0;i<this.BaseTypes.length;++i){
+                    if (i!==0) o+=',';
+                    o+=this.BaseTypes[i];
+                }
+            }
+            o+='\n{\n';
+            this.Attributes.forEach(function(attr){
+                o+='\t'+attr.toString()+'\n';
+            });
+            o+='}';
+            return o;
+        };
         return this;
     }
 
@@ -160,6 +237,33 @@
         };
         this.getException = function(name) {
             return fnFindInList(this.Exceptions, name);
+        };
+        this.toString = function(){
+            var r='interface ';
+            r+=this.Name;
+            r+=' exposes '+this.Service;
+            r+=' {\n';
+            this.Attributes.forEach(function(attr){
+                r+='\t'+attr.toString()+'\n';
+            });
+            this.Operations.forEach(function(op){
+                r+='\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
+            });
+            this.Types.forEach(function(op){
+                r+='\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
+            });
+            this.Enumerations.forEach(function(op){
+                r+='\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
+            });
+            this.Exceptions.forEach(function(op){
+                r+='\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
+            });
+            this.Events.forEach(function(op){
+                r+='\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
+            });
+
+            r+='}';
+            return r;
         };
         return this;
     }
@@ -220,6 +324,54 @@
         };
         this.getException = function(name) {
             return fnFindInList(this.Exceptions, name);
+        };
+
+        this.toString=function(){
+            var m='', end='', tabs='';
+            var attr=this.getAttribute('tidl');
+
+            if (attr!==null){
+                if (attr.Values[0][0]!='1'){
+                    m+=attr.toString()+'\n';
+                    m+='service '+this.Service+' {\n';
+                    end='}';
+                    tabs='\t';
+                }
+                else{
+                    m+=attr.toString()+'\n';
+                }
+            }
+
+            this.Attributes.forEach(function(attr){
+                if (attr.Name!=='tidl'){
+                    m+=tabs+attr.toString()+'\n';
+                }
+            });
+
+            this.Types.forEach(function(op){
+                m+=tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
+            });
+
+            this.Enumerations.forEach(function(op){
+                m+=tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
+            });
+
+            this.Exceptions.forEach(function(op){
+                m+=tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
+            });
+
+            this.Events.forEach(function(op){
+                m+=tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
+            });
+
+            for (var inf in this.Interfaces) {
+                var intf = this.Interfaces[inf];
+                m+=tabs+intf.toString().replace(/\n/g,'\n'+tabs)+'\n';
+            }
+
+            m+=end;
+
+            return m;
         };
         return this;
     }
@@ -538,9 +690,10 @@
     IdlModel.prototype.updateEndpoints = function(annoModel) {
         var idlModel = this;
         var i;
-        var intfAnno;
+        var intfAnno, op, restendpoint, majorVersion;
         for (var infn in idlModel.Interfaces) {
             var intf = idlModel.Interfaces[infn];
+            majorVersion = intf.Version().Major === 0 ? idlModel.Version().Major : intf.Version().Major;
             if (annoModel) {
                 try {
                     intfAnno = annoModel.Interfaces[infn];
@@ -551,8 +704,9 @@
                 intfAnno = null;
             }
             for (var opi in intf.Operations) {
-                var op = intf.Operations[opi];
-                var restendpoint = null;
+                op = intf.Operations[opi];
+                restendpoint = null;
+                if (op.Name[0]==='_') continue;
                 for (i = 0; i < op.Attributes.length; ++i) {
                     if (op.Attributes[i].Name == 'restendpoint') {
                         restendpoint = op.Attributes[i];
@@ -569,13 +723,79 @@
                     restendpoint.Values = [];
                 }
 
-                var majorVersion = intf.Version().Major === 0 ? idlModel.Version().Major : intf.Version().Major;
                 restendpoint.Values.push(getPostMethods(op, intfAnno));
                 restendpoint.Values.push("v" + majorVersion + "/" + intf.Name.toLowerCase() + "/" + getHttpRoute(op, intf, intfAnno));
                 restendpoint.Values.push(getQueryString(op, intfAnno));
                 restendpoint.Values.push(getBodyParam(op, intfAnno));
 
             }
+
+            //add _status operation
+            /**/
+            if (intf.getOperation('_status')===null){
+                op=new IdlOps();
+                op.Name = "_status";
+                
+                op.Return = new IdlType();
+                op.Return.Name = '_APIStatus';
+                //op.Parameters = {};
+                op.Attributes = [];
+                restendpoint = new IdlAttr();
+                restendpoint.Name = "restendpoint";
+                restendpoint.Values.push('GET');
+                restendpoint.Values.push("v" + majorVersion + "/" + intf.Name.toLowerCase() + "/_status/" );
+                restendpoint.Values.push('');
+                restendpoint.Values.push('');
+                op.Attributes.push(restendpoint);
+                //op.Exceptions = [];
+                //op.BaseTypes = [];
+                //op.IsAsync = false;
+                op.type = 'operation';
+                intf.Operations.push(op);
+            }
+
+            if (intf.getType('_APIStatus')===null){
+                op = new IdlOps();
+                op.Name = "_APIStatus";
+                op.Return.Name='type';
+                op.type = 'type';
+                op.Parameters.status=new IdlType();
+                op.Parameters.status.Name='status';
+                op.Parameters.status.Type=new IdlType();
+                op.Parameters.status.Type.Name='string';
+                op.Parameters.status.Modifiers=['mandatory'];
+                op.Parameters.status.Mandatory=true;
+                op.Attributes = [];
+                var pattr=new IdlAttr();
+                pattr.Name='parameter';
+                pattr.Type='parameter';
+                pattr.Values=[].concat(['status','status of the API','ok']);
+                op.Attributes.push(pattr);
+                intf.Types.push(op);
+            }
+
+             if (intf.getOperation('_interface')===null){
+                op=new IdlOps();
+                op.Name = "_interface";
+                
+                op.Return = new IdlType();
+                op.Return.Name = 'IdlIntf';
+                //op.Parameters = {};
+                op.Attributes = [];
+                restendpoint = new IdlAttr();
+                restendpoint.Name = "restendpoint";
+                restendpoint.Values.push('GET');
+                restendpoint.Values.push("v" + majorVersion + "/" + intf.Name.toLowerCase() + "/_interface/" );
+                restendpoint.Values.push('');
+                restendpoint.Values.push('');
+                op.Attributes.push(restendpoint);
+                //op.Exceptions = [];
+                //op.BaseTypes = [];
+                //op.IsAsync = false;
+                op.type = 'operation';
+                intf.Operations.push(op);
+            }
+
         }
     };
 
