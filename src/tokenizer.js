@@ -39,9 +39,8 @@
                     }
                     catch (ex) {
                     }
-                    return token + state.ec;
                 }
-                return token;
+                return token + state.ec;
             };
         }
 

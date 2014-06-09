@@ -31,9 +31,33 @@ describe('tidl', function() {
 		it('should have a property "Interfaces" of type object', function() {
 			model.Interfaces.should.be.type('object');
 		});
-		it('should have a function "clone"', function() {
+		it('should have a "clone" method that creats a copy of the model', function(){
+			var model=new tidl.IdlModel();
+			var attr=new tidl.IdlAttr();
+
 			should.exist(model.clone);
 			model.clone.should.be.an.Function;
+
+			attr.Name='tidl';
+			attr.Type='version';
+			attr.Values.push('1.0.0');
+			model.Attributes=[].concat([attr]);
+
+			var intf=new tidl.IdlIntf();
+			intf.Name='iname';
+			intf.Service='sname';
+			attr=new tidl.IdlAttr();
+			attr.Name='version';
+			attr.Type='version';
+			attr.Values.push('1.1.0');
+			intf.Attributes=[].concat([attr]);
+
+			model.Interfaces.iname=intf;
+
+			var newmodel=model.clone();
+			newmodel.getInterface('iname').getAttribute('version').Values[0].should.be.equal('1.1.0');
+			newmodel.getAttribute('tidl').Values[0].should.be.equal('1.0.0');
+			assert.equal(newmodel.Interfaces.iname.getDescription(), null,'description should be null');
 		});
 		it('toString should output a valid tidl for string type model for 1.0',function(){
 			var model=new tidl.IdlModel();

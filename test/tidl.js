@@ -155,6 +155,17 @@ describe('@tidl', function() {
 		msg.line.should.be.equal(2);
 		msg.col.should.be.equal(0);
 	});
+	it('should report an error for tidl attribute version less than 2 when using service keyword.', function() {
+		var res = tidl.parse('@tidl 1.0.0; \nservice S { }');
+		var msg = from(res.messages).where(function(m) {
+			return m.code == '1005'
+		}).firstOrDefault();
+		assert.notEqual(msg, null, 'there should be a message with code 1005');
+		assert.notEqual(msg, undefined, 'there should be a message with code 1005');
+		msg.type.should.be.equal('error');
+		msg.line.should.be.equal(2);
+		msg.col.should.be.equal(0);
+	});
 	it('should report a warning for tidl attribute in service scope.', function() {
 		var res = tidl.parse('@tidl 2.0.0; service S { \n@tidl 1.0.0;\n}');
 		var msg = from(res.messages).where(function(m) {
