@@ -127,6 +127,15 @@ var tidl={};
         return null;
     }
 
+    function fnFindInterface(interfaceList, name) {
+        var intf = null;
+        for (var infn in interfaceList) {
+            intf = interfaceList[infn];
+            if (intf.Name == name) return intf;
+        }
+        return null;
+    }
+
     function fnGetAttribute(name, value0) {
         for (i = 0; i < this.Attributes.length; ++i) {
             var attr = this.Attributes[i];
@@ -175,6 +184,20 @@ var tidl={};
         this.Name = '';
         this.Type = 'String';
         this.Values = [];
+        this.toString=function() {
+            var attr='@'+this.Name+' ';
+            var i=0;
+            if (this.Type!=='String' && this.Values.length>0){
+                attr+=this.Values[0];
+                i=1;
+            }
+            for(;i<this.Values.length;i++){
+                if (i!==0) attr+=',';
+                attr+=JSON.stringify(this.Values[i]);
+            }
+            attr+=';';
+            return attr;
+        };
         return this;
     }
 
@@ -186,9 +209,37 @@ var tidl={};
         return newattr;
     };
 
+    IdlAttr.prototype.updateHeaderMappings = function (annoModelOperation) {
+        var idlAttribute = this;
+        var i;
+        var attrib = null, headerMapping = null;
+        if (annoModelOperation) {
+            for (i = 0; i < annoModelOperation.Attributes.length; ++i) {
+                attrib = annoModelOperation.Attributes[i];
+                //Verify if there is a attribute of type parameter with the same name in the annotated model interface's operation    
+                if (attrib.Type === 'Parameter' && attrib.Name === 'parameter' && attrib.Values[0] === idlAttribute.Values[0]) {
+                    headerMapping = attrib.Values[1];
+                    idlAttribute.Values.push('headerMapping:' + headerMapping);
+                }
+            }
+        }
+    };
+
     function IdlType() {
         this.Name = '';
         this.Types = [];
+        this.toString=function() {
+            var t = this.Name;
+            if (this.Types.length>0) {
+                t+='<';
+                for(i=0;i<this.Types.length;++i){
+                    if (i!==0) t+=',';
+                    t+=this.Types[i].toString();
+                }
+                t+='>';
+            }
+            return t;
+        };
         return this;
     }
 
@@ -207,6 +258,18 @@ var tidl={};
         this.Type = new IdlType();
         this.Modifiers = [];
         this.Mandatory = false;
+        this.toString=function(){
+            var p='';
+            for(i=0;i<this.Modifiers.length;++i){
+                p+=this.Modifiers[i]+' ';
+            }
+            if (this.Mandatory){
+                p+='mandatory ';
+            }
+            p+=this.Type.toString()+' ';
+            p+=this.Name;
+            return p;
+        };
         return this;
     }
 
@@ -228,6 +291,45 @@ var tidl={};
         this.BaseTypes = [];
         this.IsAsync = false;
         this.type = '';
+        this.toString=function(){
+            var o='', i=0;
+            if (this.IsAsync) o+='async ';
+            if (this.type=='operation'){
+                o+=this.Return.toString()+' ';
+            }
+            else{
+                o+=this.type+' ';
+            }
+
+            o+=this.Name+'(';
+
+            for (var pn in this.Parameters) {
+                if (i!==0) o+=',';
+                o+=this.Parameters[pn].toString();
+                i++;
+            }
+            o+=')';
+            if (this.Exceptions.length>0) {
+                o+=' throws ';
+                for(i=0;i<this.Exceptions.length;++i){
+                    if (i!==0) o+=',';
+                    o+=this.Exceptions[i];
+                }
+            }
+            else if (this.BaseTypes.length>0) {
+                o+=' extends ';
+                for(i=0;i<this.BaseTypes.length;++i){
+                    if (i!==0) o+=',';
+                    o+=this.BaseTypes[i];
+                }
+            }
+            o+='\n{\n';
+            this.Attributes.forEach(function(attr){
+                o+='\t'+attr.toString()+'\n';
+            });
+            o+='}';
+            return o;
+        };
         return this;
     }
 
@@ -282,6 +384,33 @@ var tidl={};
         };
         this.getException = function(name) {
             return fnFindInList(this.Exceptions, name);
+        };
+        this.toString = function(){
+            var r='interface ';
+            r+=this.Name;
+            r+=' exposes '+this.Service;
+            r+=' {\n';
+            this.Attributes.forEach(function(attr){
+                r+='\t'+attr.toString()+'\n';
+            });
+            this.Operations.forEach(function(op){
+                r+='\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
+            });
+            this.Types.forEach(function(op){
+                r+='\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
+            });
+            this.Enumerations.forEach(function(op){
+                r+='\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
+            });
+            this.Exceptions.forEach(function(op){
+                r+='\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
+            });
+            this.Events.forEach(function(op){
+                r+='\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
+            });
+
+            r+='}';
+            return r;
         };
         return this;
     }
@@ -342,6 +471,57 @@ var tidl={};
         };
         this.getException = function(name) {
             return fnFindInList(this.Exceptions, name);
+        };
+        this.getInterface = function (name) {
+            return fnFindInterface(this.Interfaces, name);
+	};
+
+        this.toString=function(){
+            var m='', end='', tabs='';
+            var attr=this.getAttribute('tidl');
+
+            if (attr!==null){
+                if (attr.Values[0][0]!='1'){
+                    m+=attr.toString()+'\n';
+                    m+='service '+this.Service+' {\n';
+                    end='}';
+                    tabs='\t';
+                }
+                else{
+                    m+=attr.toString()+'\n';
+                }
+            }
+
+            this.Attributes.forEach(function(attr){
+                if (attr.Name!=='tidl'){
+                    m+=tabs+attr.toString()+'\n';
+                }
+            });
+
+            this.Types.forEach(function(op){
+                m+=tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
+            });
+
+            this.Enumerations.forEach(function(op){
+                m+=tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
+            });
+
+            this.Exceptions.forEach(function(op){
+                m+=tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
+            });
+
+            this.Events.forEach(function(op){
+                m+=tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
+            });
+
+            for (var inf in this.Interfaces) {
+                var intf = this.Interfaces[inf];
+                m+=tabs+intf.toString().replace(/\n/g,'\n'+tabs)+'\n';
+            }
+
+            m+=end;
+
+            return m;
         };
         return this;
     }
@@ -431,9 +611,10 @@ var tidl={};
     var AnnotationAttribute_HttpMethod = "method";
     var AnnotationAttribute_BodyParameterName = "bodyParam";
     var AnnotationAttribute_HttpStatus = "statusCode";
+    var AnnotationAttribute_ParameterHeaderMapping = "parameter";
     var FromBody_Suffix = "FromBody";
 
-    function readOperationAttributeFromAnnontationFile(op, intfAnno, attributeName) {
+    function readOperationAttributeFromAnnontationFile(op, intfAnno, attributeQualifier, attributeName) {
         var value = '';
         if (intfAnno === null || intfAnno === undefined) return value;
 
@@ -451,19 +632,23 @@ var tidl={};
             }
             //Check if the current operation has an custom attribute value specified in the annontated file
             var urlAttrib = aop.getAttribute(AnnotationAttribute_UrlRouteTemplate);
-
-            if ((attributeName == AnnotationAttribute_UrlRouteTemplate) && urlAttrib !== null) {
+            if ((attributeQualifier == AnnotationAttribute_UrlRouteTemplate) && urlAttrib !== null) {
                 return urlAttrib.Values[0];
             }
 
             var methodAttrib = aop.getAttribute(AnnotationAttribute_HttpMethod);
-            if ((attributeName == AnnotationAttribute_HttpMethod) && methodAttrib !== null) {
+            if ((attributeQualifier == AnnotationAttribute_HttpMethod) && methodAttrib !== null) {
                 return methodAttrib.Values[0];
             }
 
             var bodyAttrib = aop.getAttribute(AnnotationAttribute_BodyParameterName);
-            if ((attributeName == AnnotationAttribute_BodyParameterName) && bodyAttrib !== null) {
+            if ((attributeQualifier == AnnotationAttribute_BodyParameterName) && bodyAttrib !== null) {
                 return bodyAttrib.Values[0];
+            }
+
+            var paramHeaderMappingAttrib = aop.getAttribute(AnnotationAttribute_ParameterHeaderMapping, attributeName);
+            if ((attributeQualifier == AnnotationAttribute_ParameterHeaderMapping) && paramHeaderMappingAttrib !== null) {
+                return paramHeaderMappingAttrib.Values[0];
             }
         }
 
@@ -505,10 +690,13 @@ var tidl={};
         return (endsWith(p.Name, FromBody_Suffix) ? p.Name.substr(0, p.Name.length - 8) : p.Name);
     }
 
-    function excludeParameterFromQuerystring(p, route, bodyParam) {
+    function excludeParameterFromQuerystring(p, route, bodyParam, headerMapping) {
         //Parameters passed via HTTP method body are excluded from querystring
         if ((bodyParam === null || bodyParam === undefined || bodyParam === '') && endsWith(p.Name, FromBody_Suffix)) return true;
         if (!(bodyParam === null || bodyParam === undefined || bodyParam === '') && p.Name == bodyParam) return true;
+
+        //If the parameter is mapped to a Http header in annotation file, then its excluded
+        if (headerMapping !== null && headerMapping !== '') { return true; }
 
         if ((route === null || route === undefined || route === '')) {
             //Mandatory parameters except of type set or list, are excluded from querystring (since they are part of route)
@@ -542,12 +730,14 @@ var tidl={};
         //Check if method override exists in annotation file
         var route = readOperationAttributeFromAnnontationFile(op, intfAnno, AnnotationAttribute_UrlRouteTemplate);
         var bodyParam = readOperationAttributeFromAnnontationFile(op, intfAnno, AnnotationAttribute_BodyParameterName);
-
+        var parameterHeaderMapping = '';
         var isf = true;
         var sb = '';
         for (var pn in op.Parameters) {
             var p = op.Parameters[pn];
-            if (excludeParameterFromQuerystring(p, route, bodyParam)) continue;
+            parameterHeaderMapping = readOperationAttributeFromAnnontationFile(op, intfAnno, AnnotationAttribute_ParameterHeaderMapping, p.Name);
+            if (excludeParameterFromQuerystring(p, route, bodyParam, parameterHeaderMapping)) continue;
+
             if (isf) {
                 sb += "?";
                 isf = false;
@@ -660,9 +850,10 @@ var tidl={};
     IdlModel.prototype.updateEndpoints = function(annoModel) {
         var idlModel = this;
         var i;
-        var intfAnno;
+        var majorVersion, restendpoint = null, intf = null, intfAnno = null, opAnno = null, op = null, attribute = null;
         for (var infn in idlModel.Interfaces) {
-            var intf = idlModel.Interfaces[infn];
+            intf = idlModel.Interfaces[infn];
+            majorVersion = intf.Version().Major === 0 ? idlModel.Version().Major : intf.Version().Major;
             if (annoModel) {
                 try {
                     intfAnno = annoModel.Interfaces[infn];
@@ -673,12 +864,20 @@ var tidl={};
                 intfAnno = null;
             }
             for (var opi in intf.Operations) {
-                var op = intf.Operations[opi];
-                var restendpoint = null;
+                op = intf.Operations[opi];
+                restendpoint = null;
+                if (op.Name[0]==='_') continue;
+
+                //Verify and extract the matching operation from the annotated model interface
+                if (intfAnno) {
+                    opAnno = intfAnno.getOperation(op.Name);
+                }
+
                 for (i = 0; i < op.Attributes.length; ++i) {
-                    if (op.Attributes[i].Name == 'restendpoint') {
-                        restendpoint = op.Attributes[i];
-                        break;
+                    attribute = op.Attributes[i];
+                    attribute.updateHeaderMappings(opAnno);
+                    if (attribute.Name === 'restendpoint') {
+                        restendpoint = attribute;
                     }
                 }
                 if (restendpoint === null) {
@@ -691,13 +890,79 @@ var tidl={};
                     restendpoint.Values = [];
                 }
 
-                var majorVersion = intf.Version().Major === 0 ? idlModel.Version().Major : intf.Version().Major;
                 restendpoint.Values.push(getPostMethods(op, intfAnno));
                 restendpoint.Values.push("v" + majorVersion + "/" + intf.Name.toLowerCase() + "/" + getHttpRoute(op, intf, intfAnno));
                 restendpoint.Values.push(getQueryString(op, intfAnno));
                 restendpoint.Values.push(getBodyParam(op, intfAnno));
 
             }
+
+            //add _status operation
+            /**/
+            if (intf.getOperation('_status')===null){
+                op=new IdlOps();
+                op.Name = "_status";
+                
+                op.Return = new IdlType();
+                op.Return.Name = '_APIStatus';
+                //op.Parameters = {};
+                op.Attributes = [];
+                restendpoint = new IdlAttr();
+                restendpoint.Name = "restendpoint";
+                restendpoint.Values.push('GET');
+                restendpoint.Values.push("v" + majorVersion + "/" + intf.Name.toLowerCase() + "/_status/" );
+                restendpoint.Values.push('');
+                restendpoint.Values.push('');
+                op.Attributes.push(restendpoint);
+                //op.Exceptions = [];
+                //op.BaseTypes = [];
+                //op.IsAsync = false;
+                op.type = 'operation';
+                intf.Operations.push(op);
+            }
+
+            if (intf.getType('_APIStatus')===null){
+                op = new IdlOps();
+                op.Name = "_APIStatus";
+                op.Return.Name='type';
+                op.type = 'type';
+                op.Parameters.status=new IdlType();
+                op.Parameters.status.Name='status';
+                op.Parameters.status.Type=new IdlType();
+                op.Parameters.status.Type.Name='string';
+                op.Parameters.status.Modifiers=['mandatory'];
+                op.Parameters.status.Mandatory=true;
+                op.Attributes = [];
+                var pattr=new IdlAttr();
+                pattr.Name='parameter';
+                pattr.Type='parameter';
+                pattr.Values=[].concat(['status','status of the API','ok']);
+                op.Attributes.push(pattr);
+                intf.Types.push(op);
+            }
+
+             if (intf.getOperation('_interface')===null){
+                op=new IdlOps();
+                op.Name = "_interface";
+                
+                op.Return = new IdlType();
+                op.Return.Name = 'IdlIntf';
+                //op.Parameters = {};
+                op.Attributes = [];
+                restendpoint = new IdlAttr();
+                restendpoint.Name = "restendpoint";
+                restendpoint.Values.push('GET');
+                restendpoint.Values.push("v" + majorVersion + "/" + intf.Name.toLowerCase() + "/_interface/" );
+                restendpoint.Values.push('');
+                restendpoint.Values.push('');
+                op.Attributes.push(restendpoint);
+                //op.Exceptions = [];
+                //op.BaseTypes = [];
+                //op.IsAsync = false;
+                op.type = 'operation';
+                intf.Operations.push(op);
+            }
+
         }
     };
 
@@ -780,7 +1045,7 @@ var tidl={};
         '2005': "Unexpected character: Expecting an n.n.n version as the first value for the attributes 'tidl', 'version', 'since' or 'revision'.",
         '2006': "Unexpected character: Expecting a string as the first value for the attribute.",
         '2007': "Duplicate: there can only be one instance per scope.",
-        '2008': "",
+        '2008': "Unrecognized reserved parameter: Only reserved parameter names can begin with underscore.",
         '2009': "",
         '2010': "Unexpected character: Expected a valid interface name.",
         '2011': "Unexpected character: Expected 'exposes' keyword.",
@@ -789,9 +1054,11 @@ var tidl={};
 
         '3001': "Standards: Suggested to start with a capital letter."
     };
+
     function _createTokenizer(config, parserConfig) {
-        var ID = /^[a-zA-Z][a-zA-Z0-9_]*/;
+        var ID = /^[a-zA-Z_][a-zA-Z0-9_]*/;
         var builtintypes = ["boolean", "byte", "short", "int", "long", "float", "double", "decimal", "string", "datetime", "list", "set", "map"];
+        var reservedParams = ["_region", "_language", "_business", "_channel", "_accept", "_userId", "_appKey"];
         function contains(items, item) {
             for (var i = 0; i < items.length; i++) {
                 if (typeof item == 'function') {
@@ -804,6 +1071,7 @@ var tidl={};
             }
             return false;
         }
+
 
         function tokenString(quote, col) {
             return function _tokenString(stream, state) {
@@ -828,9 +1096,8 @@ var tidl={};
                     }
                     catch (ex) {
                     }
-                    return token + state.ec;
                 }
-                return token;
+                return token + state.ec;
             };
         }
 
@@ -1062,8 +1329,12 @@ var tidl={};
                         return tokenize(stream, state);
                     }
                     else {
-                        stream.match(ID);
                         param.Name = matches[0];
+                        if (param.Name.charAt(0)==="_" && !contains(reservedParams, param.Name)) {
+                            stream.next();
+                            return "error error-mark m-2008";
+                        }
+                        stream.match(ID);
                         state.lastToken = 'p';
                         obj.Parameters[param.Name] = param;
                         state.context.shift();
