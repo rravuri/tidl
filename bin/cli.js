@@ -185,16 +185,16 @@
             }
 
             var files = glob.sync(filename, {}); 
-            if (options.exclude == undefined){
-                var ignorefile = path.join(fulltemplatefilename, '.tidlignore');
-                if (fs.statSync(fulltemplatefilename).isDirectory()) {
-                    if (fs.existsSync(ignorefile)) {
-                        options.exclude=fs.readFileSync(ignorefile).toString().replace(/\r\n/g,';');
-                        if (program.verbose) {
-                            console.log('Ignore patten: '+options.exclude);
-                        }
-                    }
+            var ignorefile = path.join(fulltemplatefilename, '.tidlignore');
+            if (fs.statSync(fulltemplatefilename).isDirectory()) {
+                if (fs.existsSync(ignorefile)) {
+                    var igf=fs.readFileSync(ignorefile).toString().replace(/\r\n/g,';');
+                    options.exclude=options.exclude? (options.exclude+';'+igf) : igf;
                 }
+            }
+
+            if (program.verbose) {
+                console.log('Ignore patten: '+options.exclude);
             }
 
             files.forEach(function(val, index, array) {

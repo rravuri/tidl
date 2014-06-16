@@ -352,7 +352,7 @@
         };
         this.getInterface = function (name) {
             return fnFindInterface(this.Interfaces, name);
-	};
+        };
 
         this.toString=function(){
             var m='', end='', tabs='';
