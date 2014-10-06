@@ -10,7 +10,7 @@
     var util = require('util');
     var Bliss = require('bliss');
     var jsonPath = require('JSONPath');
-    var glob = require('glob')
+    var glob = require('glob');
     var minimatch = require('minimatch');
     var fromjs=require('fromjs');
     
@@ -51,7 +51,7 @@
                     encoding: 'utf8'
                 });
             } else if (program.verbose) {
-                console.log(fullfilename + '.rest - overlay file not found.')
+                console.log(fullfilename + '.rest - overlay file not found.');
             }
         }
 

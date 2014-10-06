@@ -241,6 +241,7 @@
         this.Attributes = [];
         this.Operations = [];
         this.Types = [];
+		this.Typedefs = [];
         this.Enumerations = [];
         this.Exceptions = [];
         this.Events = [];
@@ -253,6 +254,9 @@
         };
         this.getType = function(name) {
             return fnFindInList(this.Types, name);
+        };
+        this.getTypedef = function(name) {
+            return fnFindInList(this.Typedefs, name);
         };
         this.getEnumeration = function(name) {
             return fnFindInList(this.Enumerations, name);
@@ -329,6 +333,7 @@
         this.Service = '';
         this.Attributes = [];
         this.Types = [];
+		this.Typedefs = [];
         this.Enumerations = [];
         this.Exceptions = [];
         this.Events = [];
@@ -340,6 +345,9 @@
 
         this.getType = function(name) {
             return fnFindInList(this.Types, name);
+        };
+        this.getTypedef = function(name) {
+            return fnFindInList(this.Typedefs, name);
         };
         this.getEnumeration = function(name) {
             return fnFindInList(this.Enumerations, name);

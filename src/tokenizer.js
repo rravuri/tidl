@@ -444,7 +444,7 @@
                     state.lastToken = '(';
                     return null;
                 }
-                else if (state.lastToken == ')') {
+                else if (state.lastToken == ')' || ( state.lastToken == 'i' && obj.type == 'typedef')) {
                     if ((matches = stream.match(ID, false)) !== null) {
                         if (matches == 'throws') {
                             if (obj.type == 'operation') {
@@ -456,7 +456,7 @@
                             }
                         }
                         else if (matches == 'extends') {
-                            if (obj.type == 'type') {
+                            if (obj.type == 'type' || obj.type == 'typedef') {
                                 state.lastToken = '';
                                 state.context.unshift(obj.BaseTypes);
                                 state.tokenizers.unshift(tokenizeIDList());
@@ -557,7 +557,7 @@
                 }
 
                 if ((matches = stream.match(ID, false)) !== null) {
-                    if (contains(['type', 'event', 'exception', 'enumeration'], matches[0])) {
+                    if (contains(['type', 'typedef', 'event', 'exception', 'enumeration'], matches[0])) {
                         stream.match(ID);
                         ob = new tidl.IdlOps();
                         ob.type = matches[0];
@@ -785,7 +785,7 @@
                 }
 
                 if ((matches = stream.match(ID, false)) !== null) {
-                    if (contains(['type', 'event', 'exception', 'enumeration'], matches[0])) {
+                    if (contains(['type', 'typedef', 'event', 'exception', 'enumeration'], matches[0])) {
                         stream.match(ID);
                         var ob = new tidl.IdlOps();
                         ob.type = matches[0];
