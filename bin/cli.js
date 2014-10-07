@@ -13,7 +13,7 @@
     var glob = require('glob');
     var minimatch = require('minimatch');
     var fromjs=require('fromjs');
-    
+
     process.title = 'tidl';
 
     program
@@ -170,7 +170,46 @@
                 program.help();
                 process.exit(-1);
             }
-            var fulltemplatefilename = path.normalize(template);
+            var fulltemplatefilename;
+			
+			if ((template.toLowerCase().substr(0,7)=='http://' || template.toLowerCase().substr(0,8)=='https://' ) &&
+				template.toLowerCase().substr(template.length-4, 4)=='.zip') {
+    			var request=require('request');
+				var unzip=require('unzip');
+				var fstream=require('fstream');
+				fulltemplatefilename=require('os').tmpdir()+'';
+                console.error(' extracting '+template+' to ' + fulltemplatefilename);
+                var firstentry=true;
+				var writer=fstream.Writer(fulltemplatefilename);
+
+				// HTTP GET Request
+				request(template)
+   		 			// Write File
+    				.pipe(unzip.Parse()).on('entry', function (entry) {
+    					//var size = entry.size;
+    					if (firstentry) {
+							if (entry.type=='Directory') {
+								fulltemplatefilename=path.join(fulltemplatefilename,entry.path);
+							}
+						}
+						console.log( '\t' +entry.type+' : '+entry.path);
+    					entry.autodrain();
+  					})
+					.pipe(writer)
+					.on('close', function(){
+						console.log('finished extracting.');
+						processtemplate(fulltemplatefilename, filename, options);
+					});
+			}
+			else {
+				fulltemplatefilename = path.normalize(template);
+				processtemplate(fulltemplatefilename, filename, options);
+			}
+
+        });
+
+		function processtemplate(fulltemplatefilename, filename, options) {
+			
             if (!fs.existsSync(fulltemplatefilename)) {
                 console.error(fulltemplatefilename + ' dir/file does not exist.');
                 process.exit(-2);
@@ -236,7 +275,7 @@
                                 }
                                 items.forEach(function(item) {
                                     generateFile(options, dname, fname.substr(0, idx1) + (item.Name || item) + fname.substr(idx + 1), tfile, results[0].model, item);
-                                })
+                                });
                             } else {
                                 if (program.verbose) {
                                     console.log('\nGenerating 1 file for : ' + fname);
@@ -263,10 +302,12 @@
             });
 
             process.exit(0);
-        });
+        }
 
     program.parse(process.argv);
 
-    program.help();
+   if (!program.args.length) program.help();
 
-})()
+   //if (program.args[0]!='generate' || program.args[0]!=='parse') program.help();
+
+})();
