@@ -20,18 +20,21 @@
     "type": "git",
     "url": "https://github.com/rravuri/tidl.git"
   },
-  "author": { 
+  "author": {
     "name": "Rakesh Ravuri",
     "email": "rravuri@gmail.com"
-    },
+  },
   "license": "MIT",
   "dependencies": {
-    "commander": "2.2.x",
-    "bliss": "1.0.x",
     "JSONPath": "0.10.x",
+    "bliss": "1.0.x",
+    "commander": "2.2.x",
+    "fromjs": "2.1.x",
+    "fstream": "^1.0.2",
     "glob": "4.0.x",
     "minimatch": "0.3.x",
-    "fromjs": "2.1.x"
+    "request": "^2.45.0",
+    "unzip": "^0.1.11"
   },
   "devDependencies": {
     "fromjs": "2.1.x",
