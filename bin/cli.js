@@ -14,6 +14,16 @@
     var minimatch = require('minimatch');
     var fromjs=require('fromjs');
 
+	var urlpattern = /^(http\:\/\/|https\:\/\/).*/i;
+	
+	function isUrl(path) {
+		return urlpattern.test(path);
+	}
+
+	function filenameFromUrl(url){
+		
+	}
+
     process.title = 'tidl';
 
     program
@@ -116,71 +126,104 @@
     }
 
     program
-        .command('parse [filename]')
+        .command('parse [idlfilepath]')
         .description('parse the specified tidl file.')
         .option('-f, --format <type>', 'Output format [json]', 'json')
         .option('-e, --outputexp <type>', 'Output JSON Path expression default: $.model', '$.model')
-        .action(function(filename, options) {
+        .action(function(idlfilepath, options) {
             if (program.verbose) {
                 console.log('tidl %s', pack.version);
-                console.log('input file(s):\t %s', filename);
-                console.log('output expression:\t%s', options.outputexp)
+                console.log('input file(s):\t %s', idlfilepath);
+                console.log('output expression:\t%s', options.outputexp);
                 console.log('output format:\t %s\n', options.format);
             }
-            if (!filename) {
+            if (!idlfilepath) {
                 console.error('Error: idl file needs to be specified.');
                 program.help();
                 process.exit(-1);
             }
-            var files = [];
-            //files=filename.split(',');
-            files = glob.sync(filename, {});
 
-            files.forEach(function(val, index, array) {
-                var results = parse(val, options);
-                if (options.format.toLowerCase() == 'json' && results && results[0]) {
-                    console.log(JSON.stringify(jsonPath.eval(results[0], options.outputexp), null, '\t'));
-                }
-            });
-            process.exit(0);
+			function parseFile(filename, options) {
+            	var files = [];
+            	//files=filename.split(',');
+            	files = glob.sync(filename, {});
+
+	            files.forEach(function(val, index, array) {
+                	var results = parse(val, options);
+                	if (options.format.toLowerCase() == 'json' && results && results[0]) {
+                    	console.log(JSON.stringify(jsonPath.eval(results[0], options.outputexp), null, '\t'));
+                	}
+            	});
+            	process.exit(0);
+			}
+
+			if (!isUrl(idlfilepath)) return parseFile(idlfilepath, options);
+
+			var tfilename=path.join(require('os').tmpdir(),'download.idl');
+
+			request(idlfilepath).pipe(fs.createWriteStream(tfilename))
+				.on('close', function() {
+					if (fs.existsSync(tfilename+'.rest')) {
+						fs.unlinkSync(tfilename+'.rest');
+					}
+					parseFile(tfilename, options);
+				});
         });
 
 
     program
-        .command('generate [filename] [template]')
+        .command('generate [idlfilepath] [template]')
         .description('generate from the specified template.')
         .option('-t, --templatetype <type>', 'template type [bliss]', 'bliss')
         .option('-x, --exclude <pattern>', 'exclude the template files that match the pattern')
-        .action(function(filename, template, options) {
+        .action(function(idlfilepath, template, options){
             if (program.verbose) {
                 console.log('tidl %s', pack.version);
-                console.log('input file(s):\t %s', filename);
+                console.log('input file(s):\t %s', idlfilepath);
                 console.log('output directory:\t %s', program.outputdir);
                 console.log('template directory/file:\t %s', template);
                 console.log('exclude template pattern:\t %s', options.exclude);
                 console.log('template type:\t %s\n', options.templatetype);
             }
+
+			if (isUrl(idlfilepath)) {
+				var tfilename=path.join(require('os').tmpdir(),'download.idl');
+				request(idlfilepath)
+					.pipe(fs.createWriteStream(tfilename))
+					.on('close', function() {
+						if (fs.existsSync(tfilename+'.rest')) {
+							fs.unlinkSync(tfilename+'.rest');
+						}
+						handlegenerate(tfilename, template, options);
+					});
+				return;
+			}
+			
+			handlegenerate(idlfilepath, template, options);
+		});
+			
+	function handlegenerate (filename, template, options) {
             if (!filename) {
-                console.error('Error: idl file needs to be specified.');
+                console.error('Error: idl file/url needs to be specified.');
                 program.help();
                 process.exit(-1);
             }
             if (!template) {
-                console.error('Error: template directory/file needs to be specified.');
+                console.error('Error: template directory/file/url needs to be specified.');
                 program.help();
                 process.exit(-1);
             }
             var fulltemplatefilename;
-			
-			if ((template.toLowerCase().substr(0,7)=='http://' || template.toLowerCase().substr(0,8)=='https://' ) &&
+			 
+			if ( isUrl(template) &&
 				template.toLowerCase().substr(template.length-4, 4)=='.zip') {
     			var request=require('request');
 				var unzip=require('unzip');
 				var fstream=require('fstream');
-				fulltemplatefilename=require('os').tmpdir()+'';
-                console.error(' extracting '+template+' to ' + fulltemplatefilename);
+				var tdir=require('os').tmpdir();
+                console.error('extracting '+template+' to ' + tdir);
                 var firstentry=true;
-				var writer=fstream.Writer(fulltemplatefilename);
+				var writer=fstream.Writer(tdir);
 
 				// HTTP GET Request
 				request(template)
@@ -189,10 +232,10 @@
     					//var size = entry.size;
     					if (firstentry) {
 							if (entry.type=='Directory') {
-								fulltemplatefilename=path.join(fulltemplatefilename,entry.path);
+								fulltemplatefilename=path.join(tdir, entry.path);
 							}
 						}
-						console.log( '\t' +entry.type+' : '+entry.path);
+						console.log('\t' + entry.type + ' : ' + entry.path);
     					entry.autodrain();
   					})
 					.pipe(writer)
@@ -206,7 +249,7 @@
 				processtemplate(fulltemplatefilename, filename, options);
 			}
 
-        });
+        }
 
 		function processtemplate(fulltemplatefilename, filename, options) {
 			
