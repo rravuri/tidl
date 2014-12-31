@@ -209,7 +209,7 @@ var tidl={};
         return newattr;
     };
 
-    IdlAttr.prototype.updateHeaderMappings = function (annoModelOperation) {
+IdlAttr.prototype.updateHeaderMappings = function (annoModelOperation) {
         var idlAttribute = this;
         var i;
         var attrib = null, headerMapping = null;
@@ -363,6 +363,7 @@ var tidl={};
         this.Attributes = [];
         this.Operations = [];
         this.Types = [];
+		this.Typedefs = [];
         this.Enumerations = [];
         this.Exceptions = [];
         this.Events = [];
@@ -376,6 +377,9 @@ var tidl={};
         this.getType = function(name) {
             return fnFindInList(this.Types, name);
         };
+        this.getTypedef = function(name) {
+            return fnFindInList(this.Typedefs, name);
+        };
         this.getEnumeration = function(name) {
             return fnFindInList(this.Enumerations, name);
         };
@@ -387,26 +391,28 @@ var tidl={};
         };
         this.toString = function(){
             var r='interface ';
-            r+=this.Name;
-            r+=' exposes '+this.Service;
+            r += this.Name;
+            if (this.Service) {
+                r += ' exposes ' + this.Service;
+            }
             r+=' {\n';
             this.Attributes.forEach(function(attr){
                 r+='\t'+attr.toString()+'\n';
             });
             this.Operations.forEach(function(op){
-                r+='\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
+                r+= '\n' +'\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
             });
             this.Types.forEach(function(op){
-                r+='\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
+                r+= '\n' +'\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
             });
             this.Enumerations.forEach(function(op){
-                r+='\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
+                r+= '\n' +'\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
             });
             this.Exceptions.forEach(function(op){
-                r+='\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
+                r+= '\n' +'\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
             });
             this.Events.forEach(function(op){
-                r+='\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
+                r+= '\n' +'\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
             });
 
             r+='}';
@@ -451,6 +457,7 @@ var tidl={};
         this.Service = '';
         this.Attributes = [];
         this.Types = [];
+		this.Typedefs = [];
         this.Enumerations = [];
         this.Exceptions = [];
         this.Events = [];
@@ -462,6 +469,9 @@ var tidl={};
 
         this.getType = function(name) {
             return fnFindInList(this.Types, name);
+        };
+        this.getTypedef = function(name) {
+            return fnFindInList(this.Typedefs, name);
         };
         this.getEnumeration = function(name) {
             return fnFindInList(this.Enumerations, name);
@@ -499,24 +509,24 @@ var tidl={};
             });
 
             this.Types.forEach(function(op){
-                m+=tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
+                m+='\n'+tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
             });
 
             this.Enumerations.forEach(function(op){
-                m+=tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
+                m+='\n'+tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
             });
 
             this.Exceptions.forEach(function(op){
-                m+=tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
+                m+= '\n' +tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
             });
 
             this.Events.forEach(function(op){
-                m+=tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
+                m+= '\n' +tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
             });
 
             for (var inf in this.Interfaces) {
                 var intf = this.Interfaces[inf];
-                m+=tabs+intf.toString().replace(/\n/g,'\n'+tabs)+'\n';
+                m+= '\n' +tabs+intf.toString().replace(/\n/g,'\n'+tabs)+'\n';
             }
 
             m+=end;
@@ -847,7 +857,7 @@ var tidl={};
 
     }
 
-    IdlModel.prototype.updateEndpoints = function(annoModel) {
+IdlModel.prototype.updateEndpoints = function (annoModel) {
         var idlModel = this;
         var i;
         var majorVersion, restendpoint = null, intf = null, intfAnno = null, opAnno = null, op = null, attribute = null;
@@ -1501,7 +1511,7 @@ var tidl={};
                     state.lastToken = '(';
                     return null;
                 }
-                else if (state.lastToken == ')') {
+                else if (state.lastToken == ')' || ( state.lastToken == 'i' && obj.type == 'typedef')) {
                     if ((matches = stream.match(ID, false)) !== null) {
                         if (matches == 'throws') {
                             if (obj.type == 'operation') {
@@ -1513,7 +1523,7 @@ var tidl={};
                             }
                         }
                         else if (matches == 'extends') {
-                            if (obj.type == 'type') {
+                            if (obj.type == 'type' || obj.type == 'typedef') {
                                 state.lastToken = '';
                                 state.context.unshift(obj.BaseTypes);
                                 state.tokenizers.unshift(tokenizeIDList());
@@ -1614,7 +1624,7 @@ var tidl={};
                 }
 
                 if ((matches = stream.match(ID, false)) !== null) {
-                    if (contains(['type', 'event', 'exception', 'enumeration'], matches[0])) {
+                    if (contains(['type', 'typedef', 'event', 'exception', 'enumeration'], matches[0])) {
                         stream.match(ID);
                         ob = new tidl.IdlOps();
                         ob.type = matches[0];
@@ -1842,7 +1852,7 @@ var tidl={};
                 }
 
                 if ((matches = stream.match(ID, false)) !== null) {
-                    if (contains(['type', 'event', 'exception', 'enumeration'], matches[0])) {
+                    if (contains(['type', 'typedef', 'event', 'exception', 'enumeration'], matches[0])) {
                         stream.match(ID);
                         var ob = new tidl.IdlOps();
                         ob.type = matches[0];
@@ -2234,10 +2244,300 @@ var tidl={};
                             });
             }
         }
-        state.model.updateEndpoints(null);
-        state.model.updateExceptionTypes(null);
+        state.model.updateEndpoints(state.model);
+        state.model.updateExceptionTypes(state.model);
         return { model: state.model, messages: msgs };
-    };
+};
+
+var getTypeName = function ($ref) {
+    var typeName = $ref;
+    if ($ref[0] === '#') {
+        var refparts = $ref.substr(2).split('/');
+        return refparts[refparts.length - 1];
+    }
+    return typeName;
+};
+
+var getRef = function ($ref, swag) {
+    if ($ref[0] === '#') {
+        var refparts = $ref.substr(2).split('/');
+        var sv = swag;
+        //console.log(JSON.stringify(refparts));
+        refparts.forEach(function (rp) {
+            sv = sv[rp];
+        });
+        return sv;
+    }
+    else {
+        return swag.definitions[$ref];
+    }
+};
+
+var getTypeFromSchema = function (schema, swag) {
+    var type = new tidl.IdlType();
+    var aschema = schema;
+    if (schema.$ref) {
+        aschema = getRef(schema.$ref, swag);
+        type.Name = getTypeName(schema.$ref);
+    }
+    else {
+        if (aschema.type === 'array') {
+            type.Name = 'list';
+            if (aschema.items) {
+                type.Types.push(getTypeFromSchema(aschema.items, swag));
+            }
+        }
+        else {
+            type.Name = aschema.type;
+        }
+    }
+    
+    return type;
+};
+
+tidl.fromSwagger = function _fromSwagger(swag) {
+    var model = new tidl.IdlModel();
+    var msgs = [];
+    var res = { model: model, messages: msgs };
+
+    if (swag === null || swag === undefined) {
+        msgs.push( {
+            code: '10000',
+            type: 'error',
+            message: 'swagger object cannot be null or undefined.'
+        });
+        return res;
+    }
+
+    if (swag.swagger===undefined) {
+        msgs.push({
+            code: '10001',
+            type: 'error',
+            message: 'swagger object does NOT contain swagger property.'
+        });
+        return res;
+    }
+
+    if (swag.swagger !== '2.0') {
+        msgs.push({
+            code: '10002',
+            type: 'error',
+            message: 'supports only 2.0 version.'
+        });
+        return res;
+    }
+    
+    var tidlAttr = new tidl.IdlAttr();
+    tidlAttr.Name = 'tidl';
+    tidlAttr.Type = 'Version';
+    tidlAttr.Values.push('2.0.0');
+    model.Attributes.push(tidlAttr);
+
+    if (swag.info === null || swag.info === undefined) {
+        msgs.push({
+            code: '10003',
+            type: 'error',
+            message: 'info object cannot be null or undefined.'
+        });
+        return res;
+    }
+    
+    if (swag.info.title === null || swag.info.title === undefined) {
+        msgs.push({
+            code: '10004',
+            type: 'error',
+            message: 'title property on info object cannot be null or undefined.'
+        });
+        return res;
+    }
+    
+    model.Service = swag.info.title;
+    var idx = model.Service.indexOf(' ');
+    if (idx !== -1) {
+        model.Service = model.Service.substr(0, idx);
+    }
+
+    if (swag.info.description) {
+        var descAttr = new tidl.IdlAttr();
+        descAttr.Name = 'description';
+        descAttr.Values.push(swag.info.description);
+        model.Attributes.push(descAttr);
+    }
+    
+    if (swag.info.contact) {
+        var ownerAttr = new tidl.IdlAttr();
+        ownerAttr.Name = 'owner';
+        if (swag.info.contact.name) {
+            ownerAttr.Values.push(swag.info.contact.name);
+        }
+        else {
+            ownerAttr.Values.push('');
+        }
+        if (swag.info.contact.email) {
+            ownerAttr.Values.push(swag.info.contact.email);
+        }
+        else {
+            ownerAttr.Values.push('');
+        }
+        
+        if (swag.info.contact.url) {
+            ownerAttr.Values.push(swag.info.contact.url);
+        }
+
+        model.Attributes.push(ownerAttr);
+    }
+    
+    var versionAttr = new tidl.IdlAttr();
+    versionAttr.Name = 'version';
+    versionAttr.Type = 'Version';
+    
+    if (swag.info.version) {
+        versionAttr.Values.push(swag.info.version);
+    }
+    else {
+        versionAttr.Values.push('0.0.1');
+    }
+    
+    for (var path in swag.paths) {
+        if (path.charAt(0) === '/') {
+            var pathItem = swag.paths[path];
+            var iname = path.substr(1);
+            idx = iname.indexOf('/');
+            if (idx !== -1) {
+                iname = iname.substr(0, idx);
+            }
+            var intf = model.Interfaces[iname];
+            if (intf === undefined) {
+                intf = new tidl.IdlIntf();
+                intf.Name = iname;
+                model.Interfaces[iname] = intf;
+                intf.Attributes.push(versionAttr);
+            }
+            
+            for(var pathmethod in pathItem)
+            {
+                if (pathmethod === '$ref') {
+                    //TODO: handle $ref in 
+                    continue; 
+                }
+                var op = new tidl.IdlOps(); op.type = 'operation';
+                var pathOp = pathItem[pathmethod];
+                if (pathOp.operationId) {
+                    op.Name = pathOp.operationId;
+                }
+                else {
+                    op.Name = pathmethod.toLowerCase();
+                }
+                
+                if (pathOp.summary || pathOp.description) {
+                    var opdesc = new tidl.IdlAttr();
+                    opdesc.Name = 'description';
+                    opdesc.Values.push((pathOp.summary || '') + '\n' +
+                        (pathOp.description || ''));
+                    op.Attributes.push(opdesc);
+                }
+                
+                var ut = new tidl.IdlAttr();
+                ut.Name = 'urlTemplate';
+                ut.Values.push(path);
+                op.Attributes.push(ut);
+                
+                var pm = new tidl.IdlAttr();
+                pm.Name = 'method';
+                pm.Values.push(pathmethod.toUpperCase());
+                op.Attributes.push(pm);
+
+                //return value & exceptions
+                if (pathOp.responses) {
+                    for (var rstatus in pathOp.responses) {
+                        var ores = pathOp.responses[rstatus];
+                        var rattr = new tidl.IdlAttr();
+                        if (ores.description) {   
+                            rattr.Values.push(ores.description);
+                            op.Attributes.push(rattr);
+                        }
+
+                        if (rstatus[0] === '2' || rstatus === 'default') {
+                            if (ores.schema) {
+                                op.Return = getTypeFromSchema(ores.schema, swag);
+                            }
+                            rattr.Name = 'return';
+                            rattr.Values.push(ores.description);
+                        }
+                        else {
+                            var rexp = new tidl.IdlOps();
+                            rexp.type = 'exception';
+                            rexp.Name = op.Name + '_' + rstatus + 'Exception';
+                            op.Exceptions.push(rexp.Name);
+                            if (ores.description) {
+                                rattr.Name = 'exception';
+                                rattr.Type = 'Parameter';
+                                rattr.Values[0]=rexp.Name;
+                                rattr.Values.push(ores.description);
+                            }
+
+                            var esAttr = new tidl.IdlAttr();
+                            esAttr.Name = 'statusCode';
+                            esAttr.Values.push(rstatus);
+                            rexp.Attributes.push(esAttr);
+                            intf.Exceptions.push(rexp);
+                        }
+                    }
+                    if (!op.Return.Name) {
+                        op.Return = new tidl.IdlType();
+                        op.Return.Name = 'void';
+                    }
+                }
+                else {
+                    op.Return = new tidl.IdlType();
+                    op.Return.Name = 'void';
+                }
+                
+                //parameters
+                if (pathOp.parameters) {
+                    for(p=0;p<pathOp.parameters.length;p++){
+                        var pathPrm = pathOp.parameters[p];
+                        var prm = new tidl.IdlParam();
+                        if (pathPrm.required) {
+                            prm.Mandatory = true;
+                        }
+                        prm.Name = pathPrm.name;
+                        if (pathPrm.type) {
+                            if (pathPrm.type === 'array') {
+                                prm.Type.Name = 'list';
+                                prm.Type.Types.push(getTypeFromSchema(pathPrm.items, swag));
+                            }
+                            else {
+                                prm.Type.Name = pathPrm.type;
+                            }
+                        }
+                        else {
+                            prm.Type = getTypeFromSchema(pathPrm.schema, swag);
+                        }
+                        op.Parameters[prm.Name] = prm;
+                        if (pathPrm.in === 'body') {
+                            var bp = new tidl.IdlAttr();
+                            bp.Name = 'bodyParam';
+                            bp.Values.push(prm.Name);
+                            op.Attributes.push(bp);
+                        }
+                    }
+                }
+
+                intf.Operations.push(op);
+
+
+            }
+        }
+        else {
+            //TODO: error is path not start with '/'
+        }
+
+
+    }
+
+    return res;
+};
 var root = this, previous_tidl = root.tidl;
 if (typeof module !== 'undefined' && module.exports) {
 module.exports = tidl;

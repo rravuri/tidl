@@ -1,8 +1,11 @@
 node_modules
 *.sublime-project
 *.sublime-workspace
+*.njsproj
+*.sln
 output
 coverage/lib
 .gitattributes
 *.*~
+.ntvs_analysis.dat
 

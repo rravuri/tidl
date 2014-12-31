@@ -87,7 +87,7 @@
         return newattr;
     };
 
-    IdlAttr.prototype.updateHeaderMappings = function (annoModelOperation) {
+IdlAttr.prototype.updateHeaderMappings = function (annoModelOperation) {
         var idlAttribute = this;
         var i;
         var attrib = null, headerMapping = null;
@@ -269,26 +269,28 @@
         };
         this.toString = function(){
             var r='interface ';
-            r+=this.Name;
-            r+=' exposes '+this.Service;
+            r += this.Name;
+            if (this.Service) {
+                r += ' exposes ' + this.Service;
+            }
             r+=' {\n';
             this.Attributes.forEach(function(attr){
                 r+='\t'+attr.toString()+'\n';
             });
             this.Operations.forEach(function(op){
-                r+='\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
+                r+= '\n' +'\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
             });
             this.Types.forEach(function(op){
-                r+='\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
+                r+= '\n' +'\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
             });
             this.Enumerations.forEach(function(op){
-                r+='\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
+                r+= '\n' +'\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
             });
             this.Exceptions.forEach(function(op){
-                r+='\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
+                r+= '\n' +'\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
             });
             this.Events.forEach(function(op){
-                r+='\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
+                r+= '\n' +'\t'+op.toString().replace(/\n/g,'\n\t')+'\n';
             });
 
             r+='}';
@@ -385,24 +387,24 @@
             });
 
             this.Types.forEach(function(op){
-                m+=tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
+                m+='\n'+tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
             });
 
             this.Enumerations.forEach(function(op){
-                m+=tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
+                m+='\n'+tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
             });
 
             this.Exceptions.forEach(function(op){
-                m+=tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
+                m+= '\n' +tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
             });
 
             this.Events.forEach(function(op){
-                m+=tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
+                m+= '\n' +tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
             });
 
             for (var inf in this.Interfaces) {
                 var intf = this.Interfaces[inf];
-                m+=tabs+intf.toString().replace(/\n/g,'\n'+tabs)+'\n';
+                m+= '\n' +tabs+intf.toString().replace(/\n/g,'\n'+tabs)+'\n';
             }
 
             m+=end;
@@ -733,7 +735,7 @@
 
     }
 
-    IdlModel.prototype.updateEndpoints = function(annoModel) {
+IdlModel.prototype.updateEndpoints = function (annoModel) {
         var idlModel = this;
         var i;
         var majorVersion, restendpoint = null, intf = null, intfAnno = null, opAnno = null, op = null, attribute = null;

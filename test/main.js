@@ -80,7 +80,7 @@ describe('tidl', function() {
 
 			model.toString().should.be.equal(
 				'@tidl 1.0.0;\n'+
-				'interface iname exposes sname {\n'+
+				'\ninterface iname exposes sname {\n'+
 					'\t@version 1.0.0;\n'+
 				'}\n');
 		});
@@ -107,7 +107,7 @@ describe('tidl', function() {
 			model.toString().should.be.equal(
 				'@tidl 2.0.0;\n'+
 				'service sname {\n'+
-					'\tinterface iname exposes sname {\n'+
+					'\n\tinterface iname exposes sname {\n'+
 						'\t\t@version 1.0.0;\n'+
 					'\t}\n'+
 				'}');
