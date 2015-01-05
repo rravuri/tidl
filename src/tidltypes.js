@@ -62,7 +62,10 @@
         this.Name = '';
         this.Type = 'String';
         this.Values = [];
-        this.toString=function() {
+    this.toString = function () {
+            if (this.Name == 'restendpoint' || this.Name == 'resthttpstatus') {
+                return '';
+            }   
             var attr='@'+this.Name+' ';
             var i=0;
             if (this.Type!=='String' && this.Values.length>0){
@@ -141,7 +144,7 @@ IdlAttr.prototype.updateHeaderMappings = function (annoModelOperation) {
             for(i=0;i<this.Modifiers.length;++i){
                 p+=this.Modifiers[i]+' ';
             }
-            if (this.Mandatory){
+            if (this.Mandatory && p.indexOf('mandatory')!==-1){
                 p+='mandatory ';
             }
             p+=this.Type.toString()+' ';
