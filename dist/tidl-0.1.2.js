@@ -180,11 +180,12 @@ var tidl={};
         return v;
     }
 
-    function IdlAttr() {
-        this.Name = '';
-        this.Type = 'String';
-        this.Values = [];
-    this.toString = function () {
+    function IdlAttr(spec) {
+        var def = spec || {};
+        this.Name = def.Name || '';
+        this.Type = def.Type || 'String';
+        this.Values = [].concat(def.Values || []);
+        this.toString = function () {
             if (this.Name == 'restendpoint' || this.Name == 'resthttpstatus') {
                 return '';
             }   
@@ -208,7 +209,7 @@ var tidl={};
         var newattr = new IdlAttr();
         newattr.Name = this.Name;
         newattr.Type = this.Type;
-        newattr.Values = this.Values.concat([]);
+        newattr.Values = [].concat(this.Values);
         return newattr;
     };
 
@@ -220,7 +221,9 @@ IdlAttr.prototype.updateHeaderMappings = function (annoModelOperation) {
             for (i = 0; i < annoModelOperation.Attributes.length; ++i) {
                 attrib = annoModelOperation.Attributes[i];
                 //Verify if there is a attribute of type parameter with the same name in the annotated model interface's operation    
-                if (attrib.Type === 'Parameter' && attrib.Name === 'parameter' && attrib.Values[0] === idlAttribute.Values[0]) {
+            if (attrib.Type === 'Parameter' && attrib.Name === 'parameter' && 
+                    attrib.Values[0] === idlAttribute.Values[0] && attrib.Values[1] !== idlAttribute.Values[1]) {
+
                     headerMapping = attrib.Values[1];
                     idlAttribute.Values.push('headerMapping:' + headerMapping);
                 }
@@ -228,9 +231,15 @@ IdlAttr.prototype.updateHeaderMappings = function (annoModelOperation) {
         }
     };
 
-    function IdlType() {
-        this.Name = '';
+    function IdlType(spec) {
+        var def = spec || {};
+        this.Name = def.Name||'';
         this.Types = [];
+        if (def.Types) {
+            this.Types.forEach(function (typ) {
+                this.Types.push(new IdlType(typ));
+            });
+        }
         this.toString=function() {
             var t = this.Name;
             if (this.Types.length>0) {
@@ -256,11 +265,12 @@ IdlAttr.prototype.updateHeaderMappings = function (annoModelOperation) {
         return newtype;
     };
 
-    function IdlParam() {
-        this.Name = '';
-        this.Type = new IdlType();
-        this.Modifiers = [];
-        this.Mandatory = false;
+    function IdlParam(spec) {
+        var def = spec || {};
+        this.Name = def.Name||'';
+        this.Type = new IdlType(def.Type);
+        this.Modifiers = [].concat(def.Modifiers||[]);
+        this.Mandatory = def.Mandatory||false;
         this.toString=function(){
             var p='';
             for(i=0;i<this.Modifiers.length;++i){
@@ -285,15 +295,26 @@ IdlAttr.prototype.updateHeaderMappings = function (annoModelOperation) {
         return newparam;
     };
 
-    function IdlOps() {
-        this.Name = '';
-        this.Return = new IdlType();
+    function IdlOps(spec) {
+        var def = spec || {};
+        this.Name = def.Name||'';
+        this.Return = new IdlType(def.Return);
         this.Parameters = {};
+        if (def.Parameters) {
+            for (var pn in def.Parameters) {
+                this.Parameters[pn] = new IdlParam(def.Parameters[pn]);
+            }
+        }
         this.Attributes = [];
-        this.Exceptions = [];
-        this.BaseTypes = [];
-        this.IsAsync = false;
-        this.type = '';
+        if (def.Attributes) {
+            def.Attributes.forEach(function (attr) {
+                this.Attributes.push(new IdlAttr(attr));
+            });
+        }
+        this.Exceptions = [].concat(def.Exceptions||[]);
+        this.BaseTypes = [].concat(def.BaseTypes||[]);
+        this.IsAsync = def.IsAsync||false;
+        this.type = def.isPrototypeOf||'';
         this.toString=function(){
             var o='', i=0;
             if (this.IsAsync) o+='async ';
@@ -326,8 +347,8 @@ IdlAttr.prototype.updateHeaderMappings = function (annoModelOperation) {
                     o+=this.BaseTypes[i];
                 }
             }
-            o+='\n{\n';
-            this.Attributes.forEach(function(attr){
+        o += '\n{\n';
+        this.Attributes.forEach(function (attr){
                 o+='\t'+attr.toString()+'\n';
             });
             o+='}';
@@ -360,17 +381,53 @@ IdlAttr.prototype.updateHeaderMappings = function (annoModelOperation) {
         return newops;
     };
 
-    function IdlIntf() {
-        this.Name = '';
-        this.Service = '';
+    function IdlIntf(spec) {
+        var def = spec || {};
+        this.Name = def.Name||'';
+        this.Service = def.Service||'';
         this.Attributes = [];
+        if (def.Attributes) {
+            def.Attributes.forEach(function (attr) {
+                this.Attributes.push(new IdlAttr(attr));
+            });
+        }
         this.Operations = [];
+        if (def.Operations) {
+            def.Operations.forEach(function (op) {
+                this.Operations.push(new IdlOps(op));
+            });
+        }
         this.Types = [];
-		this.Typedefs = [];
+        if (def.Types) {
+            def.Types.forEach(function (op) {
+                this.Types.push(new IdlOps(op));
+            });
+        }
+        this.Typedefs = [];
+        if (def.Typedefs) {
+            def.Typedefs.forEach(function (op) {
+                this.Typedefs.push(new IdlOps(op));
+            });
+        }
         this.Enumerations = [];
-        this.Exceptions = [];
-        this.Events = [];
+        if (def.Enumerations) {
+            def.Enumerations.forEach(function (op) {
+                this.Enumerations.push(new IdlOps(op));
+            });
+        }
 
+        this.Exceptions = [];
+        if (def.Exceptions) {
+            def.Exceptions.forEach(function (op) {
+                this.Exceptions.push(new IdlOps(op));
+            });
+        }
+        this.Events = [];
+        if (def.Events) {
+        def.Events.forEach(function (op) {
+            this.Events.push(new IdlOps(op));
+            });
+        }
         this.getAttribute = fnGetAttribute;
         this.getDescription = fnGetDescription;
         this.Version = fnGetVersion;
@@ -456,15 +513,53 @@ IdlAttr.prototype.updateHeaderMappings = function (annoModelOperation) {
         return newintf;
     };
 
-    function IdlModel() {
-        this.Service = '';
+    function IdlModel(spec) {
+        var def = spec || {};
+        this.Service = def.Service||'';
         this.Attributes = [];
+        if (def.Attributes) {
+            def.Attributes.forEach(function (attr) {
+                this.Attributes.push(new IdlAttr(attr));
+            });
+        }
+        
         this.Types = [];
-		this.Typedefs = [];
+        if (def.Types) {
+            def.Types.forEach(function (op) {
+                this.Types.push(new IdlOps(op));
+            });
+        }
+        this.Typedefs = [];
+        if (def.Typedefs) {
+            def.Typedefs.forEach(function (op) {
+                this.Typedefs.push(new IdlOps(op));
+            });
+        }
         this.Enumerations = [];
+        if (def.Enumerations) {
+            def.Enumerations.forEach(function (op) {
+                this.Enumerations.push(new IdlOps(op));
+            });
+        }
+        
         this.Exceptions = [];
+        if (def.Exceptions) {
+            def.Exceptions.forEach(function (op) {
+                this.Exceptions.push(new IdlOps(op));
+            });
+        }
         this.Events = [];
+        if (def.Events) {
+            def.Events.forEach(function (op) {
+                this.Events.push(new IdlOps(op));
+        });
+    }
         this.Interfaces = {};
+        if (def.Interfaces) {
+            for (var intf in def.Interfaces) {
+                this.Interfaces[intf] = new IdlIntf(def.Interfaces[intf]);
+            }
+        }
 
         this.getAttribute = fnGetAttribute;
         this.getDescription = fnGetDescription;
@@ -491,7 +586,7 @@ IdlAttr.prototype.updateHeaderMappings = function (annoModelOperation) {
 
         this.toString=function(){
             var m='', end='', tabs='';
-            var attr=this.getAttribute('tidl');
+        var attr = this.getAttribute('tidl');
 
             if (attr!==null){
                 if (attr.Values[0][0]!='1'){
@@ -511,6 +606,11 @@ IdlAttr.prototype.updateHeaderMappings = function (annoModelOperation) {
                 }
             });
 
+            for (var inf in this.Interfaces) {
+                var intf = this.Interfaces[inf];
+                m+= '\n' +tabs+intf.toString().replace(/\n/g,'\n'+tabs)+'\n';
+            }
+
             this.Types.forEach(function(op){
                 m+='\n'+tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
             });
@@ -526,11 +626,6 @@ IdlAttr.prototype.updateHeaderMappings = function (annoModelOperation) {
             this.Events.forEach(function(op){
                 m+= '\n' +tabs+op.toString().replace(/\n/g,'\n'+tabs)+'\n';
             });
-
-            for (var inf in this.Interfaces) {
-                var intf = this.Interfaces[inf];
-                m+= '\n' +tabs+intf.toString().replace(/\n/g,'\n'+tabs)+'\n';
-            }
 
             m+=end;
 
