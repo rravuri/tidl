@@ -144,7 +144,7 @@ IdlAttr.prototype.updateHeaderMappings = function (annoModelOperation) {
             for(i=0;i<this.Modifiers.length;++i){
                 p+=this.Modifiers[i]+' ';
             }
-            if (this.Mandatory && p.indexOf('mandatory')!==-1){
+            if (this.Mandatory && p.indexOf('mandatory')==-1){
                 p+='mandatory ';
             }
             p+=this.Type.toString()+' ';
